@@ -133,6 +133,8 @@ main{flex:1;padding:20px;max-width:1000px;margin:0 auto;width:100%}
   <button class="nb" id="nav-listen" onclick="go('listen')">👂 聽力</button>
   <button class="nb" id="nav-jewel"  onclick="go('jewel')">💍 珠寶類型</button>
   <button class="nb" id="nav-birth"  onclick="go('birth')">🗓️ 誕生石</button>
+  <button class="nb" id="nav-classify" onclick="go('classify')">🪨 石頭分類</button>
+  <button class="nb" id="nav-cuts"   onclick="go('cuts')">✂️ 切割</button>
   <button class="nb" id="nav-stats"  onclick="go('stats')">📊 進度</button>
 </nav>
 <div class="pw"><div class="prog" id="prog"></div></div>
@@ -572,7 +574,7 @@ function spk(t, r=0.85, btnEl) {
 let _tt=null;
 function toast(msg,tp='good'){const el=document.getElementById('toast');if(!el)return;if(_tt)clearTimeout(_tt);el.textContent=msg;el.className=`toast ${tp} show`;_tt=setTimeout(()=>el.classList.remove('show'),1700);}
 function go(m){ST.mode=m;document.querySelectorAll('.nb').forEach(b=>b.classList.remove('act'));const el=document.getElementById('nav-'+m);if(el)el.classList.add('act');render();}
-function render(){const main=document.getElementById('main');if(!main)return;({browse:rBrowse,flash:rFlash,quiz:rQuiz,listen:rListen,stats:rStats,jewel:rJewel,birth:rBirth}[ST.mode]||rBrowse)(main);}
+function render(){const main=document.getElementById('main');if(!main)return;({browse:rBrowse,flash:rFlash,quiz:rQuiz,listen:rListen,stats:rStats,jewel:rJewel,birth:rBirth,classify:rClassify,cuts:rCuts}[ST.mode]||rBrowse)(main);}
 const SPK_ICON=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>`;
 
 // ── BROWSE ──
@@ -874,6 +876,219 @@ function rBirth(m) {
     <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;margin-bottom:4px">歐洲德語圈 (European/German) — 誕生石</div>
     <div style="font-size:11px;color:var(--text3);margin-bottom:10px">PDF 第四頁原文（英語圈之外另加此傳統）。⚠️ 標示者需注意。</div>
     ${tableWrap(DE,['月份','英文 / 發音','中文','備注'])}
+  `;
+}
+
+// ── STONE CLASSIFICATION ──
+function rClassify(m) {
+  const organic = [
+    {en:'Pearl',zh:'珍珠',note:'來自牡蠣等軟體動物的有機分泌物'},
+    {en:'Coral',zh:'珊瑚',note:'珊瑚蟲骨骼堆積而成'},
+    {en:'Fossilized Opal Clam Shell',zh:'化石蛤蜊蛋白石',note:'化石化的貝殼（Fossilized opal clam shell）'},
+    {en:'Ammolite',zh:'七彩石（菊石寶石）',note:'菊石化石，彩虹色澤'},
+    {en:'Amber',zh:'琥珀',note:'古代樹脂化石，常含古代昆蟲'},
+  ];
+  const inorganic = [
+    {en:'Diamond',zh:'鑽石',note:'碳（Carbon）在高溫高壓下結晶'},
+    {en:'Garnet',zh:'石榴石',note:'鐵鎂矽酸鹽礦物'},
+    {en:'Lapis Lazuli',zh:'青金石',note:'多礦物組成的青藍岩石'},
+    {en:'Turquoise',zh:'土耳其石',note:'含銅（Copper）的磷酸鹽礦物'},
+    {en:'Malachite',zh:'孔雀石',note:'含銅（Copper）的碳酸鹽礦物，銅氧化後形成'},
+  ];
+  const gemRow = (g) => `<div onclick="spk('${g.en.replace(/'/g,"\\'")}')"
+    style="display:flex;flex-direction:column;padding:8px 0;border-bottom:0.5px solid var(--b1);cursor:pointer">
+    <div style="font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:500">${g.en} <span style="font-size:11px;color:var(--text3)">🔊</span></div>
+    <div style="font-size:12px;color:var(--gold)">${g.zh}</div>
+    <div style="font-size:11px;color:var(--text3)">${g.note}</div>
+  </div>`;
+  m.innerHTML = `
+    <div style="font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:500;margin-bottom:4px">石頭分類 Stone Classification</div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:20px">點英文名稱聆聽發音</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:28px">
+      <div style="background:var(--bg2);border:1px solid rgba(76,175,122,.3);border-radius:var(--r);padding:16px">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;color:var(--ok);margin-bottom:2px">有機 <span onclick="spk('Organic')" style="font-size:14px;cursor:pointer">Organic 🔊</span></div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:12px">來自生物（生物來源的物質）</div>
+        ${organic.map(gemRow).join('')}
+        <div style="margin-top:10px;font-size:11px;color:var(--ok)">★ 重點：來源是生物（<span onclick="spk('living thing')" style="cursor:pointer;text-decoration:underline">living thing 🔊</span>）</div>
+      </div>
+      <div style="background:var(--bg2);border:1px solid rgba(66,165,245,.3);border-radius:var(--r);padding:16px">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;color:#7EC8E3;margin-bottom:2px">無機 <span onclick="spk('Inorganic')" style="font-size:14px;cursor:pointer">Inorganic 🔊</span></div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:12px">非生物（來自礦物、地質作用）</div>
+        ${inorganic.map(gemRow).join('')}
+        <div style="margin-top:10px;font-size:11px;color:#7EC8E3">★ 重點：來源是非生物（礦物）</div>
+      </div>
+    </div>
+    <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;margin-bottom:12px">變質作用 <span onclick="spk('Metamorphism')" style="font-size:14px;cursor:pointer;color:var(--gold)">Metamorphism 🔊</span></div>
+    <div style="background:var(--bg2);border:1px solid var(--b2);border-radius:var(--r);padding:16px;margin-bottom:14px">
+      <div style="font-size:13px;color:var(--text2);margin-bottom:8px">當一個東西和另一個東西發生反應，變成一個新的東西</div>
+      <div style="font-size:12px;color:var(--text3);line-height:1.7">石頭在高溫、高壓或化學作用下，內部結構改變，變成另一種石頭。</div>
+      <div style="margin-top:8px;padding:8px;background:rgba(200,169,110,.08);border-radius:8px;font-size:12px;color:var(--gold)">★ 重點：不是融化，而是內部結構改變！</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+      <div style="background:var(--bg2);border:1px solid var(--b1);border-radius:var(--r);padding:14px">
+        <div style="font-size:12px;color:var(--text3);margin-bottom:10px">例子 ① 石灰岩 → 大理石</div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div onclick="spk('Limestone')" style="cursor:pointer;text-align:center">
+            <div style="font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:500">石灰岩</div>
+            <div style="font-size:11px;color:var(--text3)">Limestone 🔊</div>
+          </div>
+          <div style="color:var(--err);font-size:11px;text-align:center;flex-shrink:0">高溫<br>高壓<br>→</div>
+          <div onclick="spk('Marble')" style="cursor:pointer;text-align:center">
+            <div style="font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:500">大理石</div>
+            <div style="font-size:11px;color:var(--text3)">Marble 🔊</div>
+          </div>
+        </div>
+        <div style="margin-top:8px;font-size:11px;color:var(--text3)">沉積岩在高溫高壓下，結構改變成變質岩。</div>
+      </div>
+      <div style="background:var(--bg2);border:1px solid var(--b1);border-radius:var(--r);padding:14px">
+        <div style="font-size:12px;color:var(--text3);margin-bottom:10px">例子 ② 碳 → 鑽石</div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div onclick="spk('Carbon')" style="cursor:pointer;text-align:center">
+            <div style="font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:500">碳（石墨）</div>
+            <div style="font-size:11px;color:var(--text3)">Carbon 🔊</div>
+          </div>
+          <div style="color:var(--err);font-size:11px;text-align:center;flex-shrink:0">高溫<br>高壓<br>→</div>
+          <div onclick="spk('Diamond')" style="cursor:pointer;text-align:center">
+            <div style="font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:500">鑽石</div>
+            <div style="font-size:11px;color:var(--text3)">Diamond 🔊</div>
+          </div>
+        </div>
+        <div style="margin-top:8px;font-size:11px;color:var(--text3)">碳在高溫高壓下，晶體結構改變，形成鑽石。</div>
+      </div>
+    </div>
+    <div style="background:var(--bg2);border:1px solid var(--b1);border-radius:var(--r);padding:14px">
+      <div style="font-size:13px;font-weight:500;margin-bottom:8px">📋 總結</div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.9">
+        1. 石頭分成：有機（<span onclick="spk('Organic')" style="color:var(--ok);cursor:pointer;text-decoration:underline">Organic 🔊</span>，來自生物）和無機（<span onclick="spk('Inorganic')" style="color:#7EC8E3;cursor:pointer;text-decoration:underline">Inorganic 🔊</span>，來自礦物）。<br>
+        2. 石頭可以透過「變質作用」（<span onclick="spk('Metamorphism')" style="color:var(--gold);cursor:pointer;text-decoration:underline">Metamorphism 🔊</span>），在自然界中變成新的種類。
+      </div>
+    </div>
+  `;
+}
+
+// ── CUTTING GUIDE ──
+function rCuts(m) {
+  const basicCuts = [
+    {en:'Table cut',zh:'桌面切割',desc:'平坦的大面，常見於階梯切割的頂部。Flat top surface, common in step cuts.'},
+    {en:'Step cut',zh:'階梯切割',desc:'平行階梯面，呈現鏡廳效果。Parallel step facets, creates a hall-of-mirrors effect.'},
+    {en:'Scissor cut',zh:'剪刀階梯切割',desc:'階梯面與剪刀式底部結合。Combination of step facets and scissor-like bottom.'},
+    {en:'Brilliant full cut',zh:'明亮式切割',desc:'最多刻面，光火與亮度最佳。Most facets, maximum brilliance.'},
+    {en:'Eight cut',zh:'八心八箭切割',desc:'特定明亮式切割，可見八顆心與八支箭。Special brilliant cut showing 8 hearts & 8 arrows.'},
+    {en:'Rose cut',zh:'玫瑰式切割',desc:'底部平或微凸，刻面呈三角形，古董常見。Dome-shaped with triangular facets, common in antique gems.'},
+    {en:'Half Dutch rose cut',zh:'半荷蘭玫瑰式切割',desc:'玫瑰式切割的一種，刻面少。A variation of rose cut with fewer facets.'},
+    {en:'Emerald cut',zh:'祖母綠切割',desc:'階梯切割，長方或八角形，常見於祖母綠。Step cut, rectangular or octagonal, used for emerald.'},
+    {en:'Cabochon',zh:'凸圓形切割',desc:'無刻面，表面光滑凸圓。No facets, smooth rounded surface.'},
+    {en:'Cabochon Oval',zh:'蛋面切割',desc:'橢圓蛋面切割。Oval cabochon.'},
+    {en:'Mixed cut',zh:'混合式切割',desc:'結合多種切割方式。Combination of different cut styles.'},
+  ];
+  const fancyShapes = [
+    {en:'Antique Cushion',zh:'古董軟墊形'},
+    {en:'Pear-shaped',zh:'梨形'},
+    {en:'Marquise',zh:'馬眼形'},
+    {en:'Oval',zh:'橢圓形'},
+    {en:'Drop',zh:'水滴形'},
+    {en:'Briolette',zh:'橄尖形'},
+    {en:'Antique Square',zh:'古董方形'},
+    {en:'Baguette',zh:'長方形（階梯）'},
+    {en:'Octagon',zh:'八角形'},
+    {en:'French cut',zh:'法式方形切割'},
+    {en:'Bead',zh:'圓珠形'},
+    {en:'Antique Triangle',zh:'古董三角形'},
+  ];
+  const specialShapes = [
+    {en:'Barrel-shaped',zh:'桶形'},
+    {en:'Trapezoid',zh:'梯形'},
+    {en:'Heart-shaped',zh:'心形'},
+    {en:'Escutcheon-shaped',zh:'盾形'},
+    {en:'Tapered Baguette',zh:'橄梯形'},
+    {en:'Triangle',zh:'三角形'},
+    {en:'Fan-shaped',zh:'扇形'},
+  ];
+  const opaqueGems = ['Turquoise','Jade','Rhodonite','Amber','Agate'];
+  const translucentGems = ['Ruby','Sapphire','Emerald','Garnet','Amethyst','Tourmaline'];
+  const shapeBtn = (s) => `<div onclick="spk('${s.en.replace(/'/g,"\\'")}')"
+    style="background:var(--bg2);border:1px solid var(--b1);border-radius:10px;padding:8px 14px;cursor:pointer;transition:border-color .15s"
+    onmouseover="this.style.borderColor='rgba(200,169,110,.35)'" onmouseout="this.style.borderColor=''">
+    <div style="font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:500">${s.en} 🔊</div>
+    <div style="font-size:11px;color:var(--text3)">${s.zh}</div>
+  </div>`;
+  m.innerHTML = `
+    <div style="font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:500;margin-bottom:4px">寶石切割 Gemstone Cutting</div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:20px">點英文名稱聆聽發音</div>
+
+    <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;margin-bottom:12px">透明度分類 Transparency</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px">
+      <div style="background:var(--bg2);border:1px solid var(--b2);border-radius:var(--r);padding:14px">
+        <div onclick="spk('Opaque')" style="font-family:'Cormorant Garamond',serif;font-size:18px;cursor:pointer;margin-bottom:2px">不透明 Opaque 🔊</div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:10px">光線無法穿透 · Light cannot travel through</div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px">${opaqueGems.map(s=>`<span onclick="spk('${s}')" style="display:inline-block;padding:3px 10px;border-radius:12px;font-size:12px;background:rgba(200,169,110,.1);color:var(--gold);border:0.5px solid rgba(200,169,110,.3);cursor:pointer">${s} 🔊</span>`).join('')}</div>
+        <div style="font-size:11px;color:var(--text2)">→ 適合 <span onclick="spk('Polish Only, Cabochon')" style="color:var(--gold);cursor:pointer;text-decoration:underline">Polish Only (Cabochon) 🔊</span></div>
+      </div>
+      <div style="background:var(--bg2);border:1px solid rgba(76,175,122,.3);border-radius:var(--r);padding:14px">
+        <div onclick="spk('Translucent')" style="font-family:'Cormorant Garamond',serif;font-size:18px;cursor:pointer;margin-bottom:2px">半透明 Translucent 🔊</div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:10px">光線可部分穿透 · Light can travel partially</div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px">${translucentGems.map(s=>`<span onclick="spk('${s}')" style="display:inline-block;padding:3px 10px;border-radius:12px;font-size:12px;background:rgba(76,175,122,.1);color:var(--ok);border:0.5px solid rgba(76,175,122,.25);cursor:pointer">${s} 🔊</span>`).join('')}</div>
+        <div style="font-size:11px;color:var(--text2)">→ 適合 <span onclick="spk('Faceted Cut')" style="color:var(--ok);cursor:pointer;text-decoration:underline">Faceted Cut 🔊</span></div>
+      </div>
+    </div>
+
+    <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;margin-bottom:12px">兩種切割方式比較 Comparison</div>
+    <div style="overflow-x:auto;margin-bottom:24px">
+      <table style="width:100%;border-collapse:collapse;min-width:400px">
+        <thead><tr style="border-bottom:1px solid var(--b2)">
+          <th style="padding:8px 10px;font-size:11px;color:var(--text3);text-align:left;font-weight:500">項目</th>
+          <th style="padding:8px 10px;font-size:11px;color:var(--text3);text-align:left;font-weight:500;cursor:pointer" onclick="spk('Polish Only, Cabochon')">拋光 Polish Only (Cabochon) 🔊</th>
+          <th style="padding:8px 10px;font-size:11px;color:var(--text3);text-align:left;font-weight:500;cursor:pointer" onclick="spk('Faceted Cut')">刻面切割 Faceted Cut 🔊</th>
+        </tr></thead>
+        <tbody>
+          ${[
+            ['外觀 Appearance','表面光滑、沒有切面<br><span style="color:var(--text3);font-size:10px">Smooth, no facets</span>','有多個切面<br><span style="color:var(--text3);font-size:10px">Many facets</span>'],
+            ['光線表現 Light Performance','光線較不反射，較柔和<br><span style="color:var(--text3);font-size:10px">Less reflection, softer</span>','光線多次反射，閃耀<br><span style="color:var(--text3);font-size:10px">Multiple reflections, brilliant</span>'],
+            ['適用寶石 Suitable Stones','不透明寶石<br><span style="color:var(--text3);font-size:10px">Opaque stones</span>','半透明或透明寶石<br><span style="color:var(--text3);font-size:10px">Translucent / transparent stones</span>'],
+            ['目的 Purpose','呈現顏色、紋理、自然美<br><span style="color:var(--text3);font-size:10px">Show color, patterns, natural beauty</span>','提升亮度與火光<br><span style="color:var(--text3);font-size:10px">Enhance brilliance and fire</span>'],
+          ].map(r=>`<tr style="border-bottom:0.5px solid var(--b1)">
+            <td style="padding:8px 10px;font-size:12px;color:var(--text3)">${r[0]}</td>
+            <td style="padding:8px 10px;font-size:12px">${r[1]}</td>
+            <td style="padding:8px 10px;font-size:12px">${r[2]}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+
+    <div style="background:rgba(200,169,110,.08);border:1px solid rgba(200,169,110,.25);border-radius:var(--r);padding:14px;margin-bottom:24px">
+      <div style="font-size:13px;font-weight:500;color:var(--gold);margin-bottom:8px">💡 重要重點 Key Points</div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.9">
+        1. 不透明（<span onclick="spk('Opaque')" style="color:var(--gold);cursor:pointer">Opaque 🔊</span>）→ 光線無法穿透 → 只拋光（無刻面）<br>
+        2. 半透明（<span onclick="spk('Translucent')" style="color:var(--ok);cursor:pointer">Translucent 🔊</span>）→ 光線可部分穿透 → 刻面切割<br>
+        3. 不透明寶石做成凸圓形（<span onclick="spk('Cabochon')" style="color:var(--gold);cursor:pointer">Cabochon 🔊</span>），可保留顏色與紋理的自然美。<br>
+        4. 刻面切割透過特殊角度讓光線反射，產生閃耀與火光（<span onclick="spk('Brilliance and Fire')" style="color:var(--gold);cursor:pointer">Brilliance &amp; Fire 🔊</span>）。
+      </div>
+    </div>
+
+    <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;margin-bottom:12px">基本切割類型 Basic Cut Types</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;margin-bottom:24px">
+      ${basicCuts.map(c=>`<div style="background:var(--bg2);border:1px solid var(--b1);border-radius:var(--r);padding:12px 14px;transition:border-color .15s" onmouseover="this.style.borderColor='rgba(200,169,110,.35)'" onmouseout="this.style.borderColor=''">
+        <div onclick="spk('${c.en.replace(/'/g,"\\'")}')"
+          style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;margin-bottom:2px;cursor:pointer">${c.en} 🔊</div>
+        <div style="font-size:12px;color:var(--gold);margin-bottom:4px">${c.zh}</div>
+        <div style="font-size:11px;color:var(--text3);line-height:1.5">${c.desc}</div>
+      </div>`).join('')}
+    </div>
+
+    <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;margin-bottom:12px">花式切割形狀 Fancy Shapes</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px">${fancyShapes.map(shapeBtn).join('')}</div>
+
+    <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;margin-bottom:12px">其他特殊外形 Other Special Shapes</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px">${specialShapes.map(shapeBtn).join('')}</div>
+
+    <div style="background:var(--bg2);border:1px solid var(--b1);border-radius:var(--r);padding:14px">
+      <div style="font-size:13px;font-weight:500;margin-bottom:10px">📖 名詞小百科 Terminology</div>
+      <div style="font-size:12px;color:var(--text2);line-height:2">
+        • <span onclick="spk('Cabochon')" style="cursor:pointer;color:var(--gold)">Cabochon 🔊</span>：表面光滑的圓弧形切割，無刻面。A smooth, rounded cut without facets.<br>
+        • <span onclick="spk('Faceted Cut')" style="cursor:pointer;color:var(--gold)">Faceted Cut 🔊</span>：具有多個切面，透過角度反射光線。A cut with many facets that reflect light.<br>
+        • <span onclick="spk('Angles')" style="cursor:pointer;color:var(--gold)">Angles 🔊</span>：決定光線如何進入、反射與逸出。Determine how light enters, reflects and exits the stone.
+      </div>
+    </div>
   `;
 }
 
