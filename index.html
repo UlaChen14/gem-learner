@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>💎 Gemstone Learner</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0D0D12;--bg2:#16161F;--bg3:#20202C;--text:#F0EDE6;--text2:#9896A0;--text3:#56546A;--gold:#C8A96E;--ok:#4CAF7A;--err:#E05252;--b1:rgba(255,255,255,0.07);--b2:rgba(255,255,255,0.14);--r:12px}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased}
+button{font-family:'DM Sans',sans-serif;cursor:pointer}
+nav{display:flex;align-items:center;gap:6px;padding:10px 16px;background:var(--bg2);border-bottom:1px solid var(--b1);flex-wrap:wrap;position:sticky;top:0;z-index:50}
+.logo{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--gold);margin-right:8px;flex-shrink:0}
+.nb{padding:7px 14px;border:1px solid var(--b2);border-radius:20px;background:transparent;color:var(--text2);font-size:13px;transition:all .15s}
+.nb:hover{background:var(--bg3);color:var(--text)}.nb.act{background:var(--gold);color:#000;border-color:var(--gold);font-weight:500}
+.pw{height:3px;background:var(--bg3)}.prog{height:100%;background:var(--gold);transition:width .4s;width:0%}
+main{flex:1;padding:20px;max-width:1000px;margin:0 auto;width:100%}
+.status-bar{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text3);margin-bottom:14px;padding:6px 12px;background:var(--bg2);border-radius:8px;border:1px solid var(--b1)}
+.spin{width:8px;height:8px;border-radius:50%;border:1.5px solid var(--gold);border-top-color:transparent;animation:spin .7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── pic slot ── */
+/* .ps is the image container; always a grid when showing products */
+.ps{background:var(--bg3);overflow:hidden;width:100%;height:100%}
+
+/* ── browse ── */
+.crow{display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
+.srch{flex:1;min-width:160px;padding:8px 14px;background:var(--bg2);border:1px solid var(--b2);border-radius:8px;color:var(--text);font-size:14px;outline:none;font-family:'DM Sans',sans-serif}
+.srch:focus{border-color:rgba(200,169,110,.4)}.srch::placeholder{color:var(--text3)}
+.chip{padding:6px 14px;border:1px solid var(--b1);border-radius:16px;background:transparent;color:var(--text3);font-size:12px;transition:all .15s;white-space:nowrap;cursor:pointer}
+.chip:hover{color:var(--text);border-color:var(--b2);background:var(--bg3)}.chip.act{border-color:rgba(200,169,110,.4);color:var(--gold);background:rgba(200,169,110,.08)}.chip-fam{padding:5px 12px;border:1px solid var(--b1);border-radius:14px;background:transparent;color:var(--text3);font-size:11px;transition:all .15s;white-space:nowrap;cursor:pointer}.chip-fam:hover{color:var(--text);border-color:var(--b2);background:var(--bg3)}.chip-fam.act{border-color:rgba(66,165,245,.4);color:#7EC8E3;background:rgba(66,165,245,.07)}
+.bgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.gc{background:var(--bg2);border:1px solid var(--b1);border-radius:var(--r);overflow:hidden;transition:all .15s;cursor:pointer;position:relative}
+.gc:hover{border-color:rgba(200,169,110,.35);transform:translateY(-2px)}
+.gc.must{border-color:rgba(200,169,110,.5);box-shadow:0 0 0 1px rgba(200,169,110,.3)}
+.pgrid{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;width:100%;height:100%;gap:1.5px;background:var(--bg3);align-items:stretch;justify-items:stretch}
+.pgrid-cell{overflow:hidden;background:var(--bg3);position:relative;min-height:0;min-width:0}
+.pgrid-cell img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .35s;display:block}
+.pgrid-cell img.ok{opacity:1}
+.pgrid-cell .fb{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+.pgrid-cell .fb svg{width:40px;height:40px}
+.must-badge{position:absolute;top:6px;left:6px;background:var(--gold);color:#000;font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px;z-index:2;letter-spacing:.05em}
+.nb-note{padding:7px 14px;border:1px solid var(--b2);border-radius:20px;background:transparent;color:var(--text2);font-size:13px;transition:all .15s}
+.nb-note:hover{background:var(--bg3);color:var(--text)}.nb-note.act{background:var(--gold);color:#000;border-color:var(--gold);font-weight:500}
+.bs-en{display:inline-block;font-size:9px;padding:1px 5px;border-radius:6px;margin:1px 1px 0 0;background:rgba(200,169,110,.12);color:var(--gold);border:0.5px solid rgba(200,169,110,.3)}
+.bs-eu{display:inline-block;font-size:9px;padding:1px 5px;border-radius:6px;margin:1px 1px 0 0;background:rgba(66,165,245,.1);color:#7EC8E3;border:0.5px solid rgba(66,165,245,.25)}
+.bs-gia{display:inline-block;font-size:9px;padding:1px 5px;border-radius:6px;margin:1px 1px 0 0;background:rgba(76,175,122,.1);color:var(--ok);border:0.5px solid rgba(76,175,122,.25)}
+.dis-overlay{position:absolute;top:0;right:0;background:rgba(80,80,80,.75);color:#ccc;font-size:9px;padding:2px 6px;border-bottom-left-radius:6px;letter-spacing:.03em}
+.gci{height:190px;display:grid;overflow:hidden}.gcb{padding:10px 13px 12px}
+.gen{font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;line-height:1.2;margin-bottom:2px}
+.gzh{font-size:12px;color:var(--text2);margin-bottom:4px}.gph{font-size:11px;color:var(--text3)}
+.gsc{float:right;font-size:10px;padding:2px 6px;border-radius:8px;margin-top:1px}
+.sok{background:rgba(76,175,122,.15);color:var(--ok)}.ser{background:rgba(224,82,82,.15);color:var(--err)}.sno{background:var(--bg3);color:var(--text3)}
+
+/* ── flashcard ── */
+.fcw{display:flex;flex-direction:column;align-items:center;gap:16px;padding:8px 0}
+.fc{width:min(390px,100%);perspective:1200px}
+.fci{position:relative;transform-style:preserve-3d;transition:transform .5s cubic-bezier(.4,0,.2,1)}
+.fci.flip{transform:rotateY(180deg)}
+.face{background:var(--bg2);border:1px solid var(--b2);border-radius:16px;overflow:hidden;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.face.back{position:absolute;inset:0;transform:rotateY(180deg)}
+.fcimg{height:200px;position:relative}.fchint{padding:12px;text-align:center;color:var(--text3);font-size:13px}
+/* Back face image is smaller so text content fits in same card height */
+.face.back .fcimg{height:130px}
+.fcans{padding:10px 18px 16px;text-align:center}
+.aen{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:500;margin-bottom:4px}
+.azh{font-size:15px;color:var(--text2);margin-bottom:5px}.aph{font-size:13px;color:var(--gold);margin-bottom:4px}.asy{font-size:11px;color:var(--text3)}
+.syl-s{color:var(--text);font-weight:500;text-decoration:underline;text-underline-offset:3px}
+.tip{margin-top:8px;font-size:11px;color:var(--text3);font-style:italic;line-height:1.5;padding:6px 10px;background:var(--bg3);border-radius:8px;text-align:left}
+.fcbs{display:flex;gap:10px;width:min(390px,100%)}
+.fcb{flex:1;padding:12px;border:1px solid var(--b2);border-radius:10px;background:transparent;font-size:14px;transition:all .15s}
+.fcb.know{border-color:var(--ok);color:var(--ok)}.fcb.know:hover{background:rgba(76,175,122,.1)}
+.fcb.nope{border-color:var(--err);color:var(--err)}.fcb.nope:hover{background:rgba(224,82,82,.1)}
+.spk{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border:1px solid rgba(200,169,110,.35);border-radius:20px;background:transparent;color:var(--gold);font-size:13px;transition:all .15s;-webkit-tap-highlight-color:rgba(200,169,110,.2)}
+.spk:hover{background:rgba(200,169,110,.1)}
+.spk:active{background:rgba(200,169,110,.25);transform:scale(0.95)}
+.spk.playing{background:rgba(200,169,110,.2);border-color:var(--gold)}
+
+/* ── quiz ── */
+.qw{display:flex;flex-direction:column;align-items:center;gap:16px;padding:8px 0}
+.qimg{width:min(460px,100%);height:340px;border:1px solid var(--b2);border-radius:16px;overflow:hidden;position:relative}
+.qch{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:min(480px,100%)}
+.qb{padding:13px 14px;background:var(--bg2);border:1px solid var(--b2);border-radius:10px;color:var(--text);font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;text-align:left;transition:all .15s;line-height:1.3}
+.qb .sub{display:block;font-size:11px;color:var(--text3);font-family:'DM Sans',sans-serif;font-weight:400;margin-top:2px}
+.qb:hover:not(:disabled){border-color:rgba(200,169,110,.4);background:var(--bg3)}
+.qb.correct{border-color:var(--ok);background:rgba(76,175,122,.1);color:var(--ok)}
+.qb.wrong{border-color:var(--err);background:rgba(224,82,82,.1);color:var(--err)}
+.qb:disabled{cursor:default}
+
+/* ── listen ── */
+.lw{display:flex;flex-direction:column;align-items:center;gap:18px;padding:8px 0}
+.pb{width:74px;height:74px;border-radius:50%;border:2px solid var(--gold);background:rgba(200,169,110,.1);color:var(--gold);display:flex;align-items:center;justify-content:center;transition:all .2s}
+.pb:hover{background:rgba(200,169,110,.2);transform:scale(1.06)}
+.lch{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:min(620px,100%)}
+.lc{display:flex;flex-direction:column;align-items:center;background:var(--bg2);border:1px solid var(--b2);border-radius:12px;overflow:hidden;transition:all .15s}
+.lc:hover:not(:disabled){border-color:rgba(200,169,110,.35)}.lc.correct{border-color:var(--ok)}.lc.wrong{border-color:var(--err)}.lc:disabled{cursor:default}
+.limg{width:100%;height:180px;position:relative}.lname{padding:9px 8px;font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:500;text-align:center;line-height:1.3}
+.lzh{font-size:11px;color:var(--text3);font-family:'DM Sans',sans-serif}
+
+/* ── start / mode bar ── */
+.ss{display:flex;flex-direction:column;align-items:center;gap:16px;padding:48px 20px;text-align:center}
+.st{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500}
+.ss2{font-size:14px;color:var(--text2);max-width:320px;line-height:1.6}
+.bb{padding:13px 40px;background:var(--gold);border:none;border-radius:10px;color:#000;font-size:16px;font-weight:500;transition:opacity .15s}
+.bb:hover{opacity:.85}.bbs{padding:10px 30px;font-size:14px;background:var(--gold);border:none;border-radius:10px;color:#000;font-weight:500;transition:opacity .15s}
+.bbs:hover{opacity:.85}
+.mb{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.ms{font-size:13px;color:var(--text3)}.ex{background:none;border:none;color:var(--text3);font-size:13px;padding:4px 8px}
+.ex:hover{color:var(--text)}
+
+/* ── stats ── */
+.stc{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px}
+.stcd{background:var(--bg2);border:1px solid var(--b1);border-radius:10px;padding:14px;text-align:center}
+.stn{font-size:28px;font-weight:500;display:block;margin-bottom:4px}.stl{font-size:12px;color:var(--text3)}
+.stg{display:grid;grid-template-columns:repeat(auto-fill,minmax(135px,1fr));gap:6px}
+.str{background:var(--bg2);border:1px solid var(--b1);border-radius:8px;padding:8px 10px;display:flex;align-items:center;gap:8px}
+.sdd{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+/* ── toast ── */
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(10px);padding:11px 22px;border-radius:10px;font-size:14px;font-weight:500;z-index:100;opacity:0;transition:all .25s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.good{background:#1D4D2E;border:1px solid var(--ok);color:var(--ok)}.toast.bad{background:#4D1D1D;border:1px solid var(--err);color:var(--err)}
+@media(max-width:440px){.bgrid{grid-template-columns:repeat(2,1fr)};main{padding:14px}}
+</style>
+</head>
+<body>
+<nav>
+  <span class="logo">💎</span>
+  <button class="nb act" id="nav-browse" onclick="go('browse')">📖 瀏覽</button>
+  <button class="nb" id="nav-flash"  onclick="go('flash')">🎴 閃卡</button>
+  <button class="nb" id="nav-quiz"   onclick="go('quiz')">🎯 認名</button>
+  <button class="nb" id="nav-listen" onclick="go('listen')">👂 聽力</button>
+  <button class="nb" id="nav-jewel"  onclick="go('jewel')">💍 珠寶類型</button>
+  <button class="nb" id="nav-birth"  onclick="go('birth')">🗓️ 誕生石</button>
+  <button class="nb" id="nav-stats"  onclick="go('stats')">📊 進度</button>
+</nav>
+<div class="pw"><div class="prog" id="prog"></div></div>
+<main id="main"></main>
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════════
+//  IMAGE SYSTEM — Stones Jewellery Victoria (Shopify)
+//
+//  Each gem entry in SHOP_GEMS has:
+//    coll — Shopify collection handle (null = SVG fallback)
+//    inc  — product title MUST contain one of these (all lowercase)
+//    exc  — product title must NOT contain any of these
+// ══════════════════════════════════════════════════════
+
+const STORE  = 'https://stonesjewelleryvictoria.com';
+const STORE2 = 'https://www.stonesjewellerybanff.com';
+
+// Banff store collection handles (supplements Victoria for missing/poor matches)
+const BANFF_GEMS = {
+  'Agate':                    {coll:'colored-gemstones', inc:['agate']},
+  'Alexandrite':              {coll:'colored-gemstones', inc:['alexandrite']},
+  'Ammolite':                 {coll:'colored-gemstones', inc:['ammolite']},
+  'Beryl':                    {coll:'colored-gemstones', inc:['beryl']},
+  'Black Opal':               {coll:'colored-gemstones', inc:['black opal']},
+  'Boulder Opal':             {coll:'colored-gemstones', inc:['boulder opal','boulder']},
+  'Carnelian':                {coll:'colored-gemstones', inc:['carnelian']},
+  'Chrysoberyl Catseye':      {coll:'colored-gemstones', inc:['chrysoberyl','cat']},
+  'Chrysocolla':              {coll:'colored-gemstones', inc:['chrysocolla']},
+  'Chrysoprase':              {coll:'colored-gemstones', inc:['chrysoprase']},
+  'Fire Opal':                {coll:'colored-gemstones', inc:['fire opal']},
+  'Fossilized Opal Clam Shell':{coll:'colored-gemstones', inc:['fossil','clam']},
+  'Fossils':                  {coll:'colored-gemstones', inc:['fossil']},
+  'Hematite':                 {coll:'colored-gemstones', inc:['hematite']},
+  'Hessonite':                {coll:'colored-gemstones', inc:['hessonite']},
+  'Imperial Topaz':           {coll:'colored-gemstones', inc:['imperial topaz']},
+  'Topaz':                    {coll:'colored-gemstones', inc:['yellow topaz','golden topaz','orange topaz','champagne topaz','precious topaz','honey topaz'], exc:['blue','imperial','london','swiss','sky','mystic']},
+  'Ivory':                    {coll:'colored-gemstones', inc:['ivory']},
+  'Kunzite':                  {coll:'colored-gemstones', inc:['kunzite']},
+  'Mexican Fire Opal':        {coll:'colored-gemstones', inc:['mexican']},
+  'Opal':                     {coll:'colored-gemstones', inc:['opal'], exc:['black opal','boulder','fire opal','mexican','fossil']},
+  'Red Jasper':               {coll:'colored-gemstones', inc:['jasper']},
+  'Crystal':                  {coll:'colored-gemstones', inc:['crystal quartz','clear quartz','quartz crystal']},
+  'Rose Quartz':              {coll:'colored-gemstones', inc:['rose quartz']},
+  'Rutilated Quartz':         {coll:'colored-gemstones', inc:['rutilated quartz','rutilated','rutile quartz']},
+  'Smoky Quartz':             {coll:'colored-gemstones', inc:['smoky quartz','smoky']},
+  'Rhodonite':                {coll:'colored-gemstones', inc:['rhodonite']},
+  'Spinel':                   {coll:'colored-gemstones', inc:['spinel']},
+  "Tiger's Eye":              {coll:'colored-gemstones', inc:["tiger"]},
+  'Tsavorite':                {coll:'colored-gemstones', inc:['tsavorite']},
+  'Zircon':                   {coll:'colored-gemstones', inc:['zircon']},
+};
+
+const SHOP_GEMS = {
+  'Agate':                    {coll:null},
+  'Alexandrite':              {coll:null},
+  'Amber':                    {coll:'amber', inc:[]},
+  'Amethyst':                 {coll:'amethyst-ametrine', inc:['amethyst'], exc:['ametrine']},
+  'Ammolite':                 {coll:'ammolite', inc:[]},
+  'Aquamarine':               {coll:'aquamarine', inc:[]},
+  'Aventurine':               {coll:null},
+  'B.C. Jade':                {coll:null}, // nephrite carvings visually too similar to Jade jewelry — use SVG
+  'Beryl':                    {coll:null},
+  'Black Opal':               {coll:'opals', inc:['black opal','black'], exc:['boulder','fire','mexican']},
+  'Blue Topaz':               {coll:'topaz', inc:['blue'], exc:['imperial','london','swiss']},
+  'Boulder Opal':             {coll:'opals', inc:['boulder']},
+  'Cameo':                    {coll:'cameo', inc:[]},
+  'Carnelian':                {coll:null},
+  'Chrysoberyl Catseye':      {coll:null},
+  'Chrysocolla':              {coll:null},
+  'Chrysoprase':              {coll:null},
+  'Citrine':                  {coll:'citrines', inc:[]},
+  'Coral':                    {coll:'coral', inc:[]},
+  'Crystal':                  {coll:'quartz', inc:['crystal quartz','clear quartz','rock crystal','quartz crystal'], exc:['rose','smoky','smoke','rutile','rutilated','amethyst','citrine']},
+  'Diamond':                  {coll:'diamonds', inc:[]},
+  'Emerald':                  {coll:'emerald', inc:[]},
+  'Fire Opal':                {coll:'opals', inc:['fire opal'], exc:['black','boulder','mexican']},
+  'Fossilized Opal Clam Shell':{coll:null},
+  'Fossils':                  {coll:null},
+  'Garnet':                   {coll:'garnets', inc:[], exc:['tsavorite','rhodolite','hessonite','demantoid','mali','spessartite','grossular']},
+  'Hematite':                 {coll:null},
+  'Hessonite':                {coll:'garnets', inc:['hessonite']},
+  'Imperial Topaz':           {coll:'topaz', inc:['imperial']},
+  'Ivory':                    {coll:null},
+  'Jade':                     {coll:'jade', inc:['jade'], exc:["cat's eye",'catseye']},
+  'Jade Catseye':             {coll:null}, // cat's eye jade unlikely labeled as such in store — use SVG
+  'Kunzite':                  {coll:null},
+  'Labradorite':              {coll:'multistone', inc:['labradorite']},
+  'Lapis Lazuli':             {coll:'lapis', inc:[]},
+  'Malachite':                {coll:'malachite', inc:[]},
+  'Mexican Fire Opal':        {coll:'opals', inc:['mexican']},
+  'Moonstone':                {coll:'multistone', inc:['moonstone']},
+  'Onyx':                     {coll:'onyx', inc:[]},
+  'Opal':                     {coll:'opals', inc:[], exc:['black','boulder','mexican','fire','fossilized','clam']},
+  'Pearl':                    {coll:'pearls', inc:[], exc:['south sea','tahitian','black']},
+  'Peridot':                  {coll:'peridot', inc:[]},
+  'Red Jasper':               {coll:null},
+  'Rhodochrosite':            {coll:'rhodochrosite', inc:[]},
+  'Rhodolite':                {coll:'garnets', inc:['rhodolite']},
+  'Rhodonite':                {coll:null},
+  'Rose Quartz':              {coll:'quartz', inc:['rose quartz','rose']},
+  'Ruby':                     {coll:'rubies', inc:[]},
+  'Rutilated Quartz':         {coll:'quartz', inc:['rutilated','rutile']},
+  'Sapphire':                 {coll:'sapphires', inc:[]},
+  'Smoky Quartz':             {coll:'quartz', inc:['smoky','smoke']},
+  'South Sea Pearl':          {coll:'pearls', inc:['south sea']},
+  'Spinel':                   {coll:null},
+  "Tiger's Eye":              {coll:null},
+  'Tahitian Black Pearl':     {coll:'pearls', inc:['tahitian','black']},
+  'Tanzanite':                {coll:'tanzanite', inc:[]},
+  'Topaz':                    {coll:'topaz', inc:['yellow topaz','golden topaz','orange topaz','champagne topaz','precious topaz','honey topaz'], exc:['blue','imperial','london','swiss','mystic','sky']},
+  'Tourmaline':               {coll:'tourmaline', inc:[], exc:["cat's eye",'catseye']},
+  'Tourmaline Catseye':       {coll:'tourmaline', inc:["cat's eye",'catseye','cat eye']},
+  'Tsavorite':                {coll:'garnets', inc:['tsavorite']},
+  'Turquoise':                {coll:'turquoise', inc:[]},
+  'Zircon':                   {coll:null},
+};
+
+// Shopify CDN image resize: append _600x before extension
+// Shopify image resize — strip existing size modifier + query string, then add _600x
+// e.g. product_grande.jpg?v=123 → product_600x.jpg
+function shopifyResize(src) {
+  return src
+    .replace(/\?.*$/, '')                          // strip query string
+    .replace(/_(?:pico|icon|thumb|small|compact|medium|large|grande|original|\d+x\d*|x\d+)(\.[^.]+)$/i, '$1') // strip existing size modifier
+    .replace(/\.(jpe?g|png|webp|gif)$/i, '_600x.$1'); // add 600x
+}
+
+// Filter products by inc/exc keyword rules
+function filterProducts(products, cfg) {
+  return products.filter(p => {
+    const t = p.title.toLowerCase();
+    if (cfg.exc && cfg.exc.some(x => t.includes(x))) return false;
+    if (!cfg.inc || cfg.inc.length === 0) return true;
+    return cfg.inc.some(kw => t.includes(kw));
+  });
+}
+
+// IMG[gem] = array of 4 product image URLs (padded by cycling)
+const IMG = {};
+const _collCache = {};
+let _imgLoaded = false;
+
+// Possible Banff collection handles to probe (tried in order until one returns products)
+const BANFF2_HANDLES = [
+  'colored-gemstones',
+  'colour-gemstones',
+  'gemstones',
+  'gems',
+  'all',
+];
+let _banffHandle = null; // will be set to whichever handle works
+
+async function fetchCollection(store, coll) {
+  const key = store + '|' + coll;
+  if (_collCache[key] !== undefined) return _collCache[key];
+  _collCache[key] = [];
+  try {
+    const url = `${store}/collections/${coll}/products.json?limit=250`;
+    const r = await fetch(url, {signal: AbortSignal.timeout(15000)});
+    if (!r.ok) return [];
+    const d = await r.json();
+    _collCache[key] = d.products || [];
+    return _collCache[key];
+  } catch(e) { return []; }
+}
+
+// Try every known Banff handle, pick the first one that returns products
+async function probeBanff() {
+  for (const handle of BANFF2_HANDLES) {
+    const prods = await fetchCollection(STORE2, handle);
+    if (prods.length > 0) {
+      _banffHandle = handle;
+      console.log('[Banff] Found collection:', handle, '—', prods.length, 'products');
+      // Mirror all fetched pages into every BANFF_GEMS entry
+      const key = STORE2 + '|' + handle;
+      for (const [gem, cfg] of Object.entries(BANFF_GEMS)) {
+        _collCache[STORE2 + '|' + cfg.coll] = _collCache[key];
+      }
+      return prods;
+    }
+  }
+  console.warn('[Banff] No collection found. Tried:', BANFF2_HANDLES);
+  return [];
+}
+
+function pickImgs(products, cfg, count=4) {
+  // STRICT: only use inc-matched products. Never fall back to full collection.
+  let matched = filterProducts(products, cfg);
+  // De-duplicate by image URL (not just title)
+  const seen = new Set();
+  const imgs = [];
+  for (const p of matched) {
+    // Try up to 2 images per product for better variety
+    const srcs = (p.images || []).slice(0,2).map(img => shopifyResize(img.src)).filter(Boolean);
+    for (const src of srcs) {
+      if (!seen.has(src)) {
+        seen.add(src);
+        imgs.push(src);
+      }
+      if (imgs.length >= count) break;
+    }
+    if (imgs.length >= count) break;
+  }
+  return imgs;
+}
+
+async function loadImages() {
+  setStatus('🔍 載入店鋪圖片中...', true);
+
+  // Phase 1: fetch all Victoria collections
+  const vColls = [...new Set(Object.values(SHOP_GEMS).map(c=>c.coll).filter(Boolean))];
+  await Promise.all(vColls.map(coll => fetchCollection(STORE, coll)));
+
+  // Phase 2: probe Banff — auto-detects correct collection handle
+  const banffProds = await probeBanff();
+  setStatus(`🔍 Victoria ✓ · Banff ${banffProds.length ? `✓ (${_banffHandle}, ${banffProds.length}件)` : '❌ 未找到'} · 比對中...`, true);
+
+  // Build a deduplicated list of gems to process
+  const allGems = [...new Set([...Object.keys(SHOP_GEMS), ...Object.keys(BANFF_GEMS)])];
+
+  for (const gem of allGems) {
+    if (IMG[gem]) continue;
+
+    // Try Victoria (strict inc/exc match only)
+    const vcfg = SHOP_GEMS[gem];
+    if (vcfg && vcfg.coll) {
+      const vprods = _collCache[STORE + '|' + vcfg.coll] || [];
+      const imgs = pickImgs(vprods, vcfg);
+      if (imgs.length >= 1) {
+        IMG[gem] = [0,1,2,3].map(i => imgs[i % imgs.length]);
+        patchDOM(gem);
+        continue;
+      }
+    }
+
+    // Try Banff (strict inc match only)
+    const bcfg = BANFF_GEMS[gem];
+    if (bcfg && bcfg.coll) {
+      const bprods = _collCache[STORE2 + '|' + bcfg.coll] || [];
+      const imgs = pickImgs(bprods, bcfg);
+      if (imgs.length >= 1) {
+        IMG[gem] = [0,1,2,3].map(i => imgs[i % imgs.length]);
+        patchDOM(gem);
+        continue;
+      }
+    }
+    // No match → stays as SVG illustration (no IMG[gem] set = SVG shows)
+  }
+
+  _imgLoaded = true;
+  const n = Object.keys(IMG).length;
+  setStatus(`✓ 已載入 ${n} 種寶石照片${_banffHandle ? ' · Banff:' + _banffHandle : ''}`, false);
+}
+
+function patchDOM(gem) {
+  const urls = IMG[gem];
+  if (!urls || !urls.length) return;
+  document.querySelectorAll(`.ps[data-gem="${CSS.escape(gem)}"] .pgrid-cell`).forEach((cell, i) => {
+    const url = urls[i % urls.length];
+    let img = cell.querySelector('img');
+    if (!img) {
+      img = document.createElement('img');
+      img.alt = gem; img.loading = 'lazy';
+      img.onload = () => img.classList.add('ok');
+      img.onerror = () => img.remove();
+      cell.appendChild(img);
+    }
+    if (img.src !== url) img.src = url;
+  });
+}
+
+function setStatus(msg, loading) {
+  const el = document.getElementById('img-status');
+  if (!el) return;
+  el.innerHTML = (loading ? '<div class="spin"></div>' : '') + `<span>${msg}</span>`;
+}
+// ── SVG FALLBACK ILLUSTRATIONS ──
+function ca(h, a) {
+  const r = parseInt(h.slice(1,3),16), g = parseInt(h.slice(3,5),16), b = parseInt(h.slice(5,7),16);
+  return `rgb(${Math.min(255,Math.max(0,r+a))},${Math.min(255,Math.max(0,g+a))},${Math.min(255,Math.max(0,b+a))})`;
+}
+function svgFb(sh, hx, sz) {
+  const sz2 = sz||88, m=hx, L=ca(hx,72), D=ca(hx,-52), VL=ca(hx,108), n='stroke="none"', S=`width="${sz2}" height="${sz2}"`;
+  if(sh==='brilliant') return`<svg viewBox="0 0 100 100" ${S} xmlns="http://www.w3.org/2000/svg"><polygon points="50,6 74,17 88,38 88,62 74,83 50,94 26,83 12,62 12,38 26,17" fill="${D}" ${n}/><polygon points="50,20 67,29 74,46 74,54 67,71 50,80 33,71 26,54 26,46 33,29" fill="${m}" ${n}/><polygon points="50,33 63,41 63,59 50,68 37,59 37,41" fill="${L}" ${n}/><ellipse cx="50" cy="50" rx="5" ry="5" fill="${VL}" ${n}/></svg>`;
+  if(sh==='crystal')   return`<svg viewBox="0 0 100 100" ${S} xmlns="http://www.w3.org/2000/svg"><polygon points="50,8 66,12 74,20 74,80 66,88 34,88 26,80 26,20 34,12" fill="${m}" ${n}/><polygon points="50,8 66,12 74,20 26,20 34,12" fill="${VL}" ${n}/><polygon points="26,20 34,12 34,88 26,80" fill="${D}" ${n}/><polygon points="74,20 66,12 66,88 74,80" fill="${ca(hx,-28)}" ${n}/></svg>`;
+  if(sh==='cabochon')  return`<svg viewBox="0 0 100 100" ${S} xmlns="http://www.w3.org/2000/svg"><ellipse cx="50" cy="55" rx="38" ry="32" fill="${D}" ${n}/><ellipse cx="50" cy="52" rx="34" ry="28" fill="${m}" ${n}/><ellipse cx="43" cy="40" rx="16" ry="10" fill="${L}" ${n}/><ellipse cx="40" cy="37" rx="6" ry="4" fill="${VL}" opacity=".8" ${n}/></svg>`;
+  if(sh==='rough')     return`<svg viewBox="0 0 100 100" ${S} xmlns="http://www.w3.org/2000/svg"><polygon points="50,10 82,28 88,58 72,88 28,88 12,58 18,28" fill="${D}" ${n}/><polygon points="50,22 74,37 74,66 50,78 26,66 26,37" fill="${m}" ${n}/><polygon points="50,34 64,43 64,60 50,67 36,60 36,43" fill="${L}" ${n}/></svg>`;
+  if(sh==='pearl')     return`<svg viewBox="0 0 100 100" ${S} xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="52" r="36" fill="${m}" ${n}/><circle cx="50" cy="50" r="33" fill="${L}" ${n}/><ellipse cx="40" cy="38" rx="12" ry="8" fill="${VL}" ${n}/></svg>`;
+  return`<svg viewBox="0 0 100 100" ${S} xmlns="http://www.w3.org/2000/svg"><polygon points="50,14 78,30 78,70 50,86 22,70 22,30" fill="${m}" ${n}/><polygon points="50,14 78,30 64,35 36,35 22,30" fill="${L}" ${n}/><polygon points="22,30 36,35 36,72 22,70" fill="${D}" ${n}/></svg>`;
+}
+
+function picSlot(en, sh, hx, svgsz) {
+  const urls = IMG[en] || [];
+  const fb = `<div class="fb">${svgFb(sh, hx, svgsz||80)}</div>`;
+  // Always render as 2×2 grid (4 cells). If no images yet, each cell shows SVG.
+  const cells = [0,1,2,3].map(i => {
+    const url = urls[i % urls.length];
+    const img = url ? `<img src="${url}" alt="${en}" loading="lazy" onload="this.classList.add('ok')" onerror="this.remove()">` : '';
+    return `<div class="pgrid-cell">${fb}${img}</div>`;
+  }).join('');
+  return `<div class="ps pgrid" data-gem="${en}">${cells}</div>`;
+}
+
+// ── GEM DATA ──
+// must:true  = 7 priority stones to study first
+// dis:true   = discontinued (no longer sold; kept for birthstone reference)
+// bs:[{t,m}] = birthstone tradition: t='EN'英語圈 / 'EU'歐洲德語圈 / 'GIA'GIA現代副石, m=month
+const G = [
+  {en:'Agate',zh:'瑪瑙',ph:'AG-it',sy:[{t:'AG',s:1},{t:'it',s:0}],c:'multi',hx:'#8D6E63',sh:'rough',tip:'斑紋石 → AG像銀元素符號Ag'},
+  {en:'Alexandrite',zh:'亞歷山大石',ph:'al-ig-ZAN-dryte',sy:[{t:'al',s:0},{t:'ig',s:0},{t:'ZAN',s:1},{t:'dryte',s:0}],c:'purple',hx:'#7E57C2',sh:'brilliant',tip:'Alexander大帝命名，重音ZAN，白天綠色燈光下變紫',bs:[{t:'GIA',m:'6月'}]},
+  {en:'Amber',zh:'琥珀',ph:'AM-ber',sy:[{t:'AM',s:1},{t:'ber',s:0}],c:'yellow',hx:'#F59F0A',sh:'cabochon',tip:'英文名字Amber，黃橙透明，常含古代昆蟲'},
+  {en:'Amethyst',zh:'紫水晶',ph:'AM-uh-thist',sy:[{t:'AM',s:1},{t:'uh',s:0},{t:'thist',s:0}],c:'purple',hx:'#8B5CF6',sh:'crystal',tip:'重音AM，希臘語「不醉」之意',bs:[{t:'EN',m:'2月'}]},
+  {en:'Ammolite',zh:'七彩石',ph:'AM-oh-lyte',sy:[{t:'AM',s:1},{t:'oh',s:0},{t:'lyte',s:0}],c:'multi',hx:'#43A047',sh:'rough',tip:'化石gemstone，彩虹色澤，AM重音',must:true},
+  {en:'Aquamarine',zh:'湖水藍寶',ph:'ak-wuh-muh-REEN',sy:[{t:'ak',s:0},{t:'wuh',s:0},{t:'muh',s:0},{t:'REEN',s:1}],c:'blue',hx:'#29B6D0',sh:'crystal',tip:'Aqua水+Marine海，重音最後REEN',must:true,bs:[{t:'EN',m:'3月'}]},
+  {en:'B.C. Jade',zh:'卑詩省玉',ph:'bee-SEE jayd',sy:[{t:'bee',s:0},{t:'SEE',s:1},{t:'jayd',s:0}],c:'green',hx:'#2E7D32',sh:'cabochon',tip:'British Columbia（英屬哥倫比亞）出產，主要為腎玉 Nephrite，SEE重音'},
+  {en:'Beryl',zh:'綠柱石',ph:'BEHR-il',sy:[{t:'BEHR',s:1},{t:'il',s:0}],c:'green',hx:'#66BB6A',sh:'crystal',tip:'像人名Beryl，只有兩音節'},
+  {en:'Black Opal',zh:'黑蛋白石',ph:'blak OH-pul',sy:[{t:'blak',s:1},{t:'OH',s:0},{t:'pul',s:0}],c:'multi',hx:'#1A1A2E',sh:'cabochon',tip:'最高價值的蛋白石，閃光在黑底上特別耀眼，主產澳洲Lightning Ridge'},
+  {en:'Blue Topaz',zh:'藍色拓帕石',ph:'bloo TOH-paz',sy:[{t:'bloo',s:0},{t:'TOH',s:1},{t:'paz',s:0}],c:'blue',hx:'#42A5F5',sh:'crystal',tip:'Blue+Topaz，TOH重音 ⚠️ 同族不同色',bs:[{t:'GIA',m:'12月'}]},
+  {en:'Boulder Opal',zh:'礫背蛋白石',ph:'BOL-der OH-pul',sy:[{t:'BOL',s:1},{t:'der',s:0},{t:'OH',s:1},{t:'pul',s:0}],c:'multi',hx:'#8D6E63',sh:'rough',tip:'BOL重音，蛋白石附著在礫岩基底，常帶棕色岩石紋理'},
+  {en:'Cameo',zh:'浮雕寶石',ph:'KAM-ee-oh',sy:[{t:'KAM',s:1},{t:'ee',s:0},{t:'oh',s:0}],c:'white',hx:'#D7CCA0',sh:'rough',tip:'KAM重音，非礦石而是雕刻工藝，通常在貝殼或瑪瑙上浮雕人像'},
+  {en:'Carnelian',zh:'肉紅玉髓',ph:'kar-NEEL-ee-un',sy:[{t:'kar',s:0},{t:'NEEL',s:1},{t:'ee',s:0},{t:'un',s:0}],c:'red',hx:'#C0392B',sh:'cabochon',tip:'NEEL重音，四音節，橙紅透明玉髓',bs:[{t:'EU',m:'7月'}]},
+  {en:'Chrysoberyl Catseye',zh:'貓眼金綠寶石',ph:'KRIS-oh-BEHR-il KAT-sye',sy:[{t:'KRIS',s:1},{t:'oh',s:0},{t:'BEHR',s:1},{t:'il',s:0},{t:'KAT',s:0},{t:'sye',s:0}],c:'yellow',hx:'#C8A951',sh:'cabochon',tip:'KRIS和BEHR都有重音，最正宗的貓眼石，不說Cat\'s Eye前面默認就是這個'},
+  {en:'Chrysocolla',zh:'藍玉髓',ph:'kris-oh-KOL-uh',sy:[{t:'kris',s:0},{t:'oh',s:0},{t:'KOL',s:1},{t:'uh',s:0}],c:'blue',hx:'#26A69A',sh:'cabochon',tip:'chryso=黃金(希臘)，但它是藍的！KOL重音'},
+  {en:'Citrine',zh:'黃水晶',ph:'SIT-reen',sy:[{t:'SIT',s:1},{t:'reen',s:0}],c:'yellow',hx:'#F9A825',sh:'crystal',tip:'Citrus柑橘黃，SIT-reen兩音節',bs:[{t:'GIA',m:'11月'}]},
+  {en:'Coral',zh:'珊瑚',ph:'KOR-ul',sy:[{t:'KOR',s:1},{t:'ul',s:0}],c:'red',hx:'#EF5350',sh:'cabochon',tip:'coral reef珊瑚礁，KOR重音'},
+  {en:'Crystal',zh:'水晶',ph:'KRIS-tul',sy:[{t:'KRIS',s:1},{t:'tul',s:0}],c:'white',hx:'#90CAF9',sh:'crystal',tip:'crystal clear清澈，KRIS-tul，透明無色',bs:[{t:'EU',m:'4月'}]},
+  {en:'Diamond',zh:'鑽石',ph:'DY-uh-mund',sy:[{t:'DY',s:1},{t:'uh',s:0},{t:'mund',s:0}],c:'white',hx:'#B0C4DE',sh:'brilliant',tip:'DY-uh-mund三音節，不是di-mond',must:true,bs:[{t:'EN',m:'4月'}]},
+  {en:'Emerald',zh:'祖母綠',ph:'EM-uh-ruld',sy:[{t:'EM',s:1},{t:'uh',s:0},{t:'ruld',s:0}],c:'green',hx:'#2E7D32',sh:'crystal',tip:'綠野仙蹤Emerald City，EM重音',must:true,bs:[{t:'EN',m:'5月'}]},
+  {en:'Fire Opal',zh:'火蛋白石',ph:'fyre OH-pul',sy:[{t:'fyre',s:0},{t:'OH',s:1},{t:'pul',s:0}],c:'yellow',hx:'#E64A19',sh:'cabochon',tip:'Fire火+Opal，OH重音 ⚠️ 跟蛋白石同族但橙紅如火'},
+  {en:'Fossilized Opal Clam Shell',zh:'化石蛤蜊蛋白石',ph:'FOS-il-ized OH-pul klam shel',sy:[{t:'FOS',s:1},{t:'il',s:0},{t:'ized',s:0},{t:'OH',s:1},{t:'pul',s:0},{t:'klam',s:0},{t:'shel',s:0}],c:'multi',hx:'#8D7355',sh:'rough',tip:'FOS重音，蛤蜊化石中生長出的蛋白石'},
+  {en:'Fossils',zh:'化石',ph:'FOS-ilz',sy:[{t:'FOS',s:1},{t:'ilz',s:0}],c:'multi',hx:'#8D7355',sh:'rough',tip:'fossil化石，基本單字，FOS重音'},
+  {en:'Garnet',zh:'石榴石',ph:'GAR-nit',sy:[{t:'GAR',s:1},{t:'nit',s:0}],c:'red',hx:'#C62828',sh:'brilliant',tip:'像人名Garnet，GAR重音深紅色',bs:[{t:'EN',m:'1月'}]},
+  {en:'Hematite',zh:'赤鐵礦',ph:'HEE-muh-tyte',sy:[{t:'HEE',s:1},{t:'muh',s:0},{t:'tyte',s:0}],c:'white',hx:'#607D8B',sh:'cabochon',tip:'Hema=血(希臘語)，HEE重音銀黑色'},
+  {en:'Hessonite',zh:'橙石榴石',ph:'HES-oh-nyte',sy:[{t:'HES',s:1},{t:'oh',s:0},{t:'nyte',s:0}],c:'yellow',hx:'#BF6B02',sh:'brilliant',tip:'HES重音，橙色石榴石，不同於Garnet的深紅'},
+  {en:'Imperial Topaz',zh:'帝王拓帕石',ph:'im-PEER-ee-ul TOH-paz',sy:[{t:'im',s:0},{t:'PEER',s:1},{t:'ee',s:0},{t:'ul',s:0},{t:'TOH',s:0},{t:'paz',s:0}],c:'yellow',hx:'#FF8C00',sh:'crystal',tip:'PEER重音，最珍貴的橙粉色，與一般黃色Topaz不同'},
+  {en:'Ivory',zh:'象牙',ph:'EYE-vuh-ree',sy:[{t:'EYE',s:1},{t:'vuh',s:0},{t:'ree',s:0}],c:'white',hx:'#C8B97A',sh:'cabochon',tip:'EYE眼睛起音，ivory tower象牙塔'},
+  {en:'Jade',zh:'翡翠',ph:'jayd',sy:[{t:'jayd',s:1}],c:'green',hx:'#1B8A5A',sh:'cabochon',tip:'最短！一個音節jayd'},
+  {en:'Jade Catseye',zh:'翡翠貓眼',ph:'jayd KAT-sye',sy:[{t:'jayd',s:0},{t:'KAT',s:1},{t:'sye',s:0}],c:'green',hx:'#1B8A5A',sh:'cabochon',tip:'KAT重音，翡翠的貓眼效果'},
+  {en:'Kunzite',zh:'孔賽石',ph:'KUNZ-yte',sy:[{t:'KUNZ',s:1},{t:'yte',s:0}],c:'purple',hx:'#CE93D8',sh:'crystal',tip:'Kunz博士命名，KUNZ重音粉紫色'},
+  {en:'Labradorite',zh:'拉長石',ph:'LAB-ruh-doh-ryte',sy:[{t:'LAB',s:1},{t:'ruh',s:0},{t:'doh',s:0},{t:'ryte',s:0}],c:'multi',hx:'#455A64',sh:'cabochon',tip:'Labrador犬的產地，LAB重音四音節，閃光效果'},
+  {en:'Lapis Lazuli',zh:'青金石',ph:'LAP-is LAZ-yoo-lee',sy:[{t:'LAP',s:1},{t:'is',s:0},{t:'LAZ',s:1},{t:'yoo',s:0},{t:'lee',s:0}],c:'blue',hx:'#1A237E',sh:'cabochon',tip:'兩個重音LAP+LAZ，五音節，深藍金點',bs:[{t:'EU',m:'9月'}]},
+  {en:'Malachite',zh:'孔雀石',ph:'MAL-uh-kyte',sy:[{t:'MAL',s:1},{t:'uh',s:0},{t:'kyte',s:0}],c:'green',hx:'#1B5E20',sh:'cabochon',tip:'MAL重音，綠色漩渦條紋'},
+  {en:'Mexican Fire Opal',zh:'墨西哥火蛋白石',ph:'MEK-si-kun fyre OH-pul',sy:[{t:'MEK',s:1},{t:'si',s:0},{t:'kun',s:0},{t:'fyre',s:0},{t:'OH',s:1},{t:'pul',s:0}],c:'yellow',hx:'#E67E22',sh:'cabochon',tip:'MEK重音，橙紅透明，無閃光效果，主產墨西哥'},
+  {en:'Moonstone',zh:'月光石',ph:'MOON-stohn',sy:[{t:'MOON',s:1},{t:'stohn',s:0}],c:'white',hx:'#BDBDBD',sh:'cabochon',tip:'Moon月+stone石，月光藍白流光',bs:[{t:'EU',m:'6月'},{t:'GIA',m:'6月'}]},
+  {en:'Onyx',zh:'縞瑪瑙',ph:'OH-niks',sy:[{t:'OH',s:1},{t:'niks',s:0}],c:'white',hx:'#37474F',sh:'cabochon',tip:'OH-niks，黑白條紋',bs:[{t:'EU',m:'2月'}]},
+  {en:'Opal',zh:'蛋白石',ph:'OH-pul',sy:[{t:'OH',s:1},{t:'pul',s:0}],c:'multi',hx:'#80DEEA',sh:'cabochon',tip:'OH-pul，彩虹變色，最魔法的石頭',bs:[{t:'EN',m:'10月'}]},
+  {en:'Pearl',zh:'珍珠',ph:'perl',sy:[{t:'perl',s:1}],c:'white',hx:'#D4CAB8',sh:'pearl',tip:'一個音節perl，押韻girl/curl/hurl',bs:[{t:'EN',m:'6月'}]},
+  {en:'Peridot',zh:'橄欖石',ph:'PEHR-ih-dot',sy:[{t:'PEHR',s:1},{t:'ih',s:0},{t:'dot',s:0}],c:'green',hx:'#8DB600',sh:'crystal',tip:'PEHR重音，dot結尾t輕帶，橄欖綠',bs:[{t:'EN',m:'8月'}]},
+  {en:'Red Jasper',zh:'紅碧玉',ph:'red JAS-per',sy:[{t:'red',s:0},{t:'JAS',s:1},{t:'per',s:0}],c:'red',hx:'#C0392B',sh:'rough',tip:'JAS重音，碧玉Jasper的紅色品種',bs:[{t:'EU',m:'3月'}]},
+  {en:'Rhodochrosite',zh:'菱錳礦',ph:'roh-doh-KROH-syte',sy:[{t:'roh',s:0},{t:'doh',s:0},{t:'KROH',s:1},{t:'syte',s:0}],c:'red',hx:'#E91E8C',sh:'rough',tip:'最難！roh-doh-KROH-syte，KROH重音，粉紅條紋'},
+  {en:'Rhodolite',zh:'薔薇榴石',ph:'ROH-doh-lyte',sy:[{t:'ROH',s:1},{t:'doh',s:0},{t:'lyte',s:0}],c:'red',hx:'#AD1457',sh:'brilliant',tip:'ROH重音，注意lyte結尾，玫瑰紅石榴石'},
+  {en:'Rhodonite',zh:'玫瑰石',ph:'ROH-doh-nyte',sy:[{t:'ROH',s:1},{t:'doh',s:0},{t:'nyte',s:0}],c:'red',hx:'#C2185B',sh:'cabochon',tip:'ROH重音，nyte結尾（vs Rhodolite的lyte）'},
+  {en:'Rose Quartz',zh:'粉水晶',ph:'rohz KWORTS',sy:[{t:'rohz',s:0},{t:'KWORTS',s:1}],c:'red',hx:'#F48FB1',sh:'crystal',tip:'Rose玫瑰+Quartz水晶，KWORTS唸快，淡粉色',bs:[{t:'EU',m:'1月'}]},
+  {en:'Ruby',zh:'紅寶石',ph:'ROO-bee',sy:[{t:'ROO',s:1},{t:'bee',s:0}],c:'red',hx:'#B71C1C',sh:'brilliant',tip:'ROO-bee，像人名Ruby，深紅',must:true,bs:[{t:'EN',m:'7月'}]},
+  {en:'Rutilated Quartz',zh:'髮晶',ph:'ROO-tih-layd-tid',sy:[{t:'ROO',s:1},{t:'tih',s:0},{t:'layd',s:0},{t:'tid',s:0}],c:'yellow',hx:'#B8860B',sh:'crystal',tip:'ROO重音，內含金色針狀rutile'},
+  {en:'Sapphire',zh:'藍寶石',ph:'SAF-yre',sy:[{t:'SAF',s:1},{t:'yre',s:0}],c:'blue',hx:'#1565C0',sh:'brilliant',tip:'SAF重音，兩音節',must:true,bs:[{t:'EN',m:'9月'}]},
+  {en:'Smoky Quartz',zh:'茶晶',ph:'SMOH-kee KWORTS',sy:[{t:'SMOH',s:1},{t:'kee',s:0},{t:'KWORTS',s:0}],c:'multi',hx:'#6D4C41',sh:'crystal',tip:'煙燻Smoky+石英，SMOH重音，煙灰色'},
+  {en:'South Sea Pearl',zh:'南洋珍珠',ph:'south see perl',sy:[{t:'south',s:1},{t:'see',s:0},{t:'perl',s:0}],c:'white',hx:'#F0EAD6',sh:'pearl',tip:'最大粒的養殖珍珠，主產澳洲、菲律賓、印尼'},
+  {en:'Spinel',zh:'尖晶石',ph:'spin-EL',sy:[{t:'spin',s:0},{t:'EL',s:1}],c:'red',hx:'#C62828',sh:'brilliant',tip:'重音在後EL，spin-EL',bs:[{t:'GIA',m:'8月'}]},
+  {en:'Tahitian Black Pearl',zh:'大溪地黑珍珠',ph:'tuh-HEE-shun blak perl',sy:[{t:'tuh',s:0},{t:'HEE',s:1},{t:'shun',s:0},{t:'blak',s:0},{t:'perl',s:0}],c:'white',hx:'#2C3E50',sh:'pearl',tip:'HEE重音，來自大溪地（法屬玻里尼西亞）的黑色珍珠'},
+  {en:'Tanzanite',zh:'丹泉石',ph:'TAN-zuh-nyte',sy:[{t:'TAN',s:1},{t:'zuh',s:0},{t:'nyte',s:0}],c:'purple',hx:'#4527A0',sh:'crystal',tip:'Tanzania坦尚尼亞，TAN重音，藍紫色',must:true,bs:[{t:'GIA',m:'12月'}]},
+  {en:"Tiger's Eye",zh:'虎眼石',ph:"TY-gerz eye",sy:[{t:'TY',s:1},{t:'gerz',s:0},{t:'eye',s:0}],c:'yellow',hx:'#D4A017',sh:'cabochon',tip:"TY重音，三音節，金黃絲絨光澤（Chatoyancy）",bs:[{t:'EU',m:'11月'}]},
+  {en:'Topaz',zh:'拓帕石',ph:'TOH-paz',sy:[{t:'TOH',s:1},{t:'paz',s:0}],c:'yellow',hx:'#F59E0B',sh:'crystal',tip:'TOH-paz兩音節，TOH重音 ⚠️ 黃/橙色，不同於藍色拓帕石',bs:[{t:'EN',m:'11月'}]},
+  {en:'Tourmaline',zh:'碧璽',ph:'TOOR-muh-lin',sy:[{t:'TOOR',s:1},{t:'muh',s:0},{t:'lin',s:0}],c:'multi',hx:'#D81B60',sh:'crystal',tip:'TOOR像tour旅行，三音節多彩',bs:[{t:'EU',m:'10月'},{t:'GIA',m:'10月'}]},
+  {en:'Tourmaline Catseye',zh:'碧璽貓眼',ph:'TOOR-muh-lin KAT-sye',sy:[{t:'TOOR',s:1},{t:'muh',s:0},{t:'lin',s:0},{t:'KAT',s:0},{t:'sye',s:0}],c:'multi',hx:'#D81B60',sh:'cabochon',tip:'TOOR重音，碧璽的貓眼效果'},
+  {en:'Tsavorite',zh:'綠石榴石',ph:'TSAV-oh-ryte',sy:[{t:'TSAV',s:1},{t:'oh',s:0},{t:'ryte',s:0}],c:'green',hx:'#388E3C',sh:'brilliant',tip:'來自Tsavo國家公園，TSAV重音，綠色石榴石'},
+  {en:'Turquoise',zh:'土耳其石',ph:'TUR-kwoyz',sy:[{t:'TUR',s:1},{t:'kwoyz',s:0}],c:'blue',hx:'#00897B',sh:'cabochon',tip:'TUR重音，kwoyz不是kwaz，天空藍',bs:[{t:'EN',m:'12月'}]},
+  {en:'Zircon',zh:'鋯石',ph:'ZUR-kon',sy:[{t:'ZUR',s:1},{t:'kon',s:0}],c:'white',hx:'#78909C',sh:'brilliant',tip:'ZUR重音，和Zirconium同根',bs:[{t:'EU',m:'12月'},{t:'GIA',m:'12月'}]},
+];
+
+// ── STATE ──
+const LS_KEY = 'gem-learner-scores-v1'; // localStorage key, shared across all versions of this file
+function loadScores() { try { return JSON.parse(localStorage.getItem(LS_KEY) || '{}'); } catch(e) { return {}; } }
+function saveScores() { try { localStorage.setItem(LS_KEY, JSON.stringify(ST.scores)); } catch(e) {} }
+
+const ST={mode:'browse',bF:'all',bFam:null,bQ:'',fcQ:[],fcI:0,fcFlip:false,fcSes:{c:0,t:0},qQ:[],qI:0,qCh:[],qAns:false,qSel:null,qSes:{c:0,t:0},lQ:[],lI:0,lCh:[],lAns:false,lSel:null,lSes:{c:0,t:0},lAuto:false,scores:loadScores()};
+function gsc(en){return ST.scores[en]||{c:0,t:0};}
+function rec(en,ok){const s=gsc(en);s.t++;if(ok)s.c++;ST.scores[en]=s;saveScores();upProg();}
+function upProg(){const active=G.filter(g=>!g.dis);const n=active.filter(g=>{const s=gsc(g.en);return s.t>=2&&s.c/s.t>=0.7;}).length;const el=document.getElementById('prog');if(el)el.style.width=(n/active.length*100)+'%';}
+function shuf(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
+// Discontinued gems are excluded from practice queues (quiz/flashcard/listen)
+function weighted(){const active=G.filter(g=>!g.dis);const out=[];active.forEach(g=>{const s=gsc(g.en);let w=3;if(s.t>0){const r=s.c/s.t;w=r>=0.8?1:r>=0.5?2:4;}for(let i=0;i<w;i++)out.push(g);});return shuf(out).slice(0,active.length*2);}
+function imgKey(gem) {
+  // Returns a string key representing the visual "group" of a gem's images.
+  // Gems with identical keys look the same and shouldn't appear together as choices.
+  const urls = IMG[gem] || [];
+  if (!urls.length) return 'svg:' + gem; // SVG fallback — each gem has unique SVG color
+  // Use first image URL as key (same product = same key)
+  return urls[0];
+}
+
+function ch4(g) {
+  // Build a pool excluding: the target gem, discontinued gems
+  const pool = shuf(G.filter(x => x.en !== g.en && !x.dis));
+  const targetKey = imgKey(g.en);
+  const chosen = [];
+  const usedKeys = new Set([targetKey]);
+
+  // First pass: prefer gems that are visually distinct (different imgKey)
+  for (const x of pool) {
+    if (chosen.length >= 3) break;
+    const k = imgKey(x.en);
+    if (!usedKeys.has(k)) {
+      usedKeys.add(k);
+      chosen.push(x);
+    }
+  }
+
+  // Second pass: if we still need more (rare edge case), allow repeating image keys
+  for (const x of pool) {
+    if (chosen.length >= 3) break;
+    if (!chosen.includes(x)) chosen.push(x);
+  }
+
+  return shuf([g, ...chosen]);
+}
+function phonEl(g){return g.sy.map(s=>`<span class="${s.s?'syl-s':''}">${s.t}</span>`).join('<span style="color:#3A3A50;margin:0 2px">·</span>');}
+function spk(t, r=0.85, btnEl) {
+  // Visual feedback on the button
+  if (btnEl) {
+    btnEl.classList.add('playing');
+    setTimeout(() => btnEl.classList.remove('playing'), 1200);
+  }
+  // On iOS, speechSynthesis sometimes needs a small delay after cancel
+  try {
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(t);
+    u.lang = 'en-US'; u.rate = r;
+    // iOS requires speak() in the same call stack as user gesture, use tiny timeout as fallback
+    setTimeout(() => {
+      try { window.speechSynthesis.speak(u); } catch(e) {}
+    }, 50);
+  } catch(e) {}
+}
+let _tt=null;
+function toast(msg,tp='good'){const el=document.getElementById('toast');if(!el)return;if(_tt)clearTimeout(_tt);el.textContent=msg;el.className=`toast ${tp} show`;_tt=setTimeout(()=>el.classList.remove('show'),1700);}
+function go(m){ST.mode=m;document.querySelectorAll('.nb').forEach(b=>b.classList.remove('act'));const el=document.getElementById('nav-'+m);if(el)el.classList.add('act');render();}
+function render(){const main=document.getElementById('main');if(!main)return;({browse:rBrowse,flash:rFlash,quiz:rQuiz,listen:rListen,stats:rStats,jewel:rJewel,birth:rBirth}[ST.mode]||rBrowse)(main);}
+const SPK_ICON=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>`;
+
+// ── BROWSE ──
+// Family groups — clicking these filters to all gems in that family
+const FAM_GROUPS = {
+  'opal':    {label:'🔮 Opal 系', gems:['Opal','Black Opal','Boulder Opal','Fire Opal','Mexican Fire Opal','Fossilized Opal Clam Shell']},
+  'garnet':  {label:'🩸 Garnet 系', gems:['Garnet','Tsavorite','Hessonite','Rhodolite']},
+  'pearl':   {label:'🫧 Pearl 系', gems:['Pearl','South Sea Pearl','Tahitian Black Pearl']},
+  'quartz':  {label:'💎 Quartz 系', gems:['Crystal','Rose Quartz','Rutilated Quartz','Smoky Quartz','Amethyst','Citrine']},
+  'topaz':   {label:'💛 Topaz 系', gems:['Topaz','Blue Topaz','Imperial Topaz']},
+  'jade':    {label:'🟩 Jade 系', gems:['Jade','B.C. Jade','Jade Catseye']},
+  'tourm':   {label:'🌈 Tourmaline 系', gems:['Tourmaline','Tourmaline Catseye']},
+};
+
+function rBrowse(m){
+  const CLS=['all','purple','blue','green','red','yellow','white','multi'];
+  const LBL={all:'全部',purple:'紫',blue:'藍',green:'綠',red:'紅',yellow:'黃',white:'無色',multi:'雜色'};
+  // bFam = active family group key, overrides color filter
+  const activeFam = ST.bFam || null;
+  const famGems = activeFam ? new Set(FAM_GROUPS[activeFam].gems) : null;
+  const F=G.filter(g=>{
+    const mq=!ST.bQ||g.en.toLowerCase().includes(ST.bQ.toLowerCase())||g.zh.includes(ST.bQ)||g.ph.toLowerCase().includes(ST.bQ.toLowerCase());
+    if (!mq) return false;
+    if (famGems) return famGems.has(g.en);
+    return ST.bF==='all'||g.c===ST.bF;
+  });
+  m.innerHTML=`
+    <div class="status-bar" id="img-status"><div class="spin"></div><span>圖片載入中...</span></div>
+    <div class="crow">
+      <input class="srch" placeholder="搜尋..." value="${ST.bQ}" oninput="ST.bQ=this.value;render()">
+      ${CLS.map(c=>`<button class="chip ${!activeFam&&ST.bF===c?'act':''}" onclick="ST.bFam=null;ST.bF='${c}';render()">${LBL[c]}</button>`).join('')}
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+      ${Object.entries(FAM_GROUPS).map(([k,v])=>`<button class="chip-fam ${activeFam===k?'act':''}" onclick="ST.bFam=ST.bFam==='${k}'?null:'${k}';render()">${v.label}</button>`).join('')}
+    </div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:12px">${F.length} 種寶石 · ⭐必學 · 🗓誕生石 · 灰框=已不販售 · 點卡片聆聽發音</div>
+    <div class="bgrid">
+      ${F.map(g=>{const s=gsc(g.en);const c2=s.t===0?'sno':s.c/s.t>=0.7?'sok':'ser';const si=s.t===0?'·':s.c/s.t>=0.7?'✓':'✗';const bsTrad={'EN':'英語圈','EU':'歐洲','GIA':'GIA'};return`<div class="gc ${g.must?'must':''}" style="${g.dis?'opacity:.65;':''}">
+        ${g.must?`<div class="must-badge">⭐ 必學</div>`:''}
+        ${g.dis?`<div class="dis-overlay">已不販售</div>`:''}
+        <div class="gci" onclick="spk('${g.en.replace(/'/g,"\\'")}')">
+          ${picSlot(g.en,g.sh,g.hx,68)}
+        </div>
+        <div class="gcb" onclick="spk('${g.en.replace(/'/g,"\\'")}')">
+          <div style="display:flex;align-items:flex-start;gap:4px"><div class="gen" style="flex:1">${g.en}</div><span class="gsc ${c2}">${si}</span></div>
+          <div class="gzh">${g.zh}</div><div class="gph">${g.ph}</div>
+          ${g.bs?`<div style="margin-top:4px">${g.bs.map(b=>`<span class="bs-${b.t.toLowerCase()}">${b.m}·${bsTrad[b.t]||b.t}</span>`).join('')}</div>`:''}
+        </div>
+      </div>`;}).join('')}
+    </div>`;
+  if(!_imgLoaded) triggerLoad();
+  else setStatus(`✓ 圖片已載入`, false);
+}
+
+// ── FLASHCARD ──
+function rFlash(m){
+  if(!ST.fcQ.length){m.innerHTML=`<div class="ss"><div class="st">🎴 閃卡練習</div><div class="ss2">看圖猜名字，翻卡確認，系統自動多顯示你不熟的單字</div><button class="bb" onclick="startFlash()">開始練習</button></div>`;return;}
+  const g=ST.fcQ[ST.fcI%ST.fcQ.length];const tot=Math.min(ST.fcQ.length,G.length);
+  m.innerHTML=`
+    <div class="mb"><span class="ms">${(ST.fcI%tot)+1}/${tot} · ✓${ST.fcSes.c}/${ST.fcSes.t}</span><button class="ex" onclick="ST.fcQ=[];render()">✕ 結束</button></div>
+    <div class="fcw">
+      <div class="fc" onclick="flipCard()">
+        <div class="fci ${ST.fcFlip?'flip':''}">
+          <div class="face front">
+            <div class="fcimg">${picSlot(g.en,g.sh,g.hx,140)}</div>
+            <div class="fchint">這是哪種寶石？點擊翻卡</div>
+          </div>
+          <div class="face back">
+            <div class="fcimg">${picSlot(g.en,g.sh,g.hx,140)}</div>
+            <div class="fcans">
+              <div class="aen">${g.en}</div><div class="azh">${g.zh}</div>
+              <div class="aph">${g.ph}</div><div class="asy">${phonEl(g)}</div>
+              ${g.tip?`<div class="tip">💡 ${g.tip}</div>`:''}
+            </div>
+          </div>
+        </div>
+      </div>
+      ${ST.fcFlip?`
+        <button class="spk" onclick="spk('${g.en.replace(/'/g,"\\'")}',0.85,this)"> ${SPK_ICON} 聆聽發音</button>
+        <div class="fcbs">
+          <button class="fcb nope" onclick="fcAns(false)">✗ 不認識</button>
+          <button class="fcb know" onclick="fcAns(true)">✓ 認識了！</button>
+        </div>`:`<div style="font-size:12px;color:var(--text3)">正確率 ${ST.fcSes.t>0?Math.round(ST.fcSes.c/ST.fcSes.t*100):0}%</div>`}
+    </div>`;
+  if(ST._asp){ST._asp=false;setTimeout(()=>spk(g.en),200);}
+}
+function startFlash(){ST.fcQ=weighted();ST.fcI=0;ST.fcFlip=false;ST.fcSes={c:0,t:0};ST._asp=true;render();}
+function flipCard(){ST.fcFlip=!ST.fcFlip;if(ST.fcFlip)spk(ST.fcQ[ST.fcI%ST.fcQ.length].en);render();}
+function fcAns(ok){const g=ST.fcQ[ST.fcI%ST.fcQ.length];rec(g.en,ok);ST.fcSes.t++;if(ok)ST.fcSes.c++;ST.fcI++;ST.fcFlip=false;ST._asp=true;if(ST.fcI>=ST.fcQ.length){ST.fcQ=weighted();ST.fcI=0;toast(`一輪完成！正確率 ${Math.round(ST.fcSes.c/ST.fcSes.t*100)}%`);}render();}
+
+// ── QUIZ ──
+function rQuiz(m){
+  if(!ST.qQ.length){m.innerHTML=`<div class="ss"><div class="st">🎯 認名測驗</div><div class="ss2">看圖片，從四個選項中選出正確的英文名稱</div><button class="bb" onclick="startQuiz()">開始測驗</button></div>`;return;}
+  const g=ST.qQ[ST.qI%ST.qQ.length];const tot=Math.min(ST.qQ.length,G.length);
+  m.innerHTML=`
+    <div class="mb"><span class="ms">${(ST.qI%tot)+1}/${tot} · ✓${ST.qSes.c}/${ST.qSes.t}</span><button class="ex" onclick="ST.qQ=[];render()">✕ 結束</button></div>
+    <div class="qw">
+      <div class="qimg">${picSlot(g.en,g.sh,g.hx,140)}</div>
+      <div style="font-size:14px;color:var(--text2)">這個寶石的英文名稱是？</div>
+      <div class="qch">
+        ${ST.qCh.map(c=>{let cl='';if(ST.qAns){cl=c.en===g.en?'correct':c.en===ST.qSel?'wrong':'';}return`<button class="qb ${cl}" ${ST.qAns?'disabled':''} onclick="qAns('${c.en.replace(/[()'/]/g,'')}','${c.en.replace(/'/g,"\\'")}')">
+          ${c.en}<span class="sub">${c.zh} · ${c.ph}</span></button>`;}).join('')}
+      </div>
+      ${ST.qAns?`
+        <button class="spk" onclick="spk('${g.en.replace(/'/g,"\\'")}',0.85,this)">${SPK_ICON} 聽發音</button>
+        ${g.tip?`<div style="font-size:12px;color:var(--text3);font-style:italic;text-align:center;max-width:340px">💡 ${g.tip}</div>`:''}
+        <button class="bbs" onclick="qNext()">下一題 →</button>`:''}
+    </div>`;
+}
+function startQuiz(){ST.qQ=weighted();ST.qI=0;ST.qAns=false;ST.qSel=null;ST.qSes={c:0,t:0};ST.qCh=ch4(ST.qQ[0]);render();}
+function qAns(_,sel){const g=ST.qQ[ST.qI%ST.qQ.length];ST.qAns=true;ST.qSel=sel;const ok=sel===g.en;rec(g.en,ok);ST.qSes.t++;if(ok)ST.qSes.c++;if(ok)toast('✓ 正確！');else toast(`✗ 是 ${g.en}`,'bad');spk(g.en);render();}
+function qNext(){ST.qI++;ST.qAns=false;ST.qSel=null;if(ST.qI>=ST.qQ.length){ST.qQ=weighted();ST.qI=0;toast(`一輪完成！${ST.qSes.c}/${ST.qSes.t}`);}ST.qCh=ch4(ST.qQ[ST.qI%ST.qQ.length]);render();}
+
+// ── LISTEN ──
+function rListen(m){
+  if(!ST.lQ.length){m.innerHTML=`<div class="ss"><div class="st">👂 聽力測驗</div><div class="ss2">播放發音，選出對應的寶石圖片</div><button class="bb" onclick="startListen()">開始測驗</button></div>`;return;}
+  const g=ST.lQ[ST.lI%ST.lQ.length];const tot=Math.min(ST.lQ.length,G.length);
+  m.innerHTML=`
+    <div class="mb"><span class="ms">${(ST.lI%tot)+1}/${tot} · ✓${ST.lSes.c}/${ST.lSes.t}</span><button class="ex" onclick="ST.lQ=[];render()">✕ 結束</button></div>
+    <div class="lw">
+      <div style="font-size:14px;color:var(--text2)">聽聲音，選出對應的寶石</div>
+      <button class="pb" onclick="spk('${g.en.replace(/'/g,"\\'")}',0.8)"><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></button>
+      ${ST.lAns?`<div style="font-size:13px;color:var(--gold)">${phonEl(g)}</div>`:`<div style="font-size:13px;color:var(--text3)">點▶播放後選擇</div>`}
+      <div class="lch">
+        ${ST.lCh.map(c=>{let cl='';if(ST.lAns){cl=c.en===g.en?'correct':c.en===ST.lSel?'wrong':'';}return`<button class="lc ${cl}" ${ST.lAns?'disabled':''} onclick="lAns('${c.en.replace(/'/g,"\\'")}')">
+          <div class="limg">${picSlot(c.en,c.sh,c.hx,68)}</div>
+          <div class="lname">${ST.lAns?c.en:'?'}<br><span class="lzh">${ST.lAns?c.zh:''}</span></div>
+        </button>`;}).join('')}
+      </div>
+      ${ST.lAns?`
+        ${g.tip?`<div style="font-size:12px;color:var(--text3);font-style:italic;text-align:center;max-width:340px">💡 ${g.tip}</div>`:''}
+        <button class="bbs" onclick="lNext()">下一題 →</button>`:''}
+    </div>`;
+  if(ST.lAuto){ST.lAuto=false;setTimeout(()=>spk(g.en,0.8),300);}
+}
+function startListen(){ST.lQ=weighted();ST.lI=0;ST.lAns=false;ST.lSel=null;ST.lSes={c:0,t:0};ST.lAuto=true;ST.lCh=ch4(ST.lQ[0]);render();}
+function lAns(sel){const g=ST.lQ[ST.lI%ST.lQ.length];ST.lAns=true;ST.lSel=sel;const ok=sel===g.en;rec(g.en,ok);ST.lSes.t++;if(ok)ST.lSes.c++;if(ok)toast('✓ 正確！');else toast(`✗ 是 ${g.en}`,'bad');render();}
+function lNext(){ST.lI++;ST.lAns=false;ST.lSel=null;ST.lAuto=true;if(ST.lI>=ST.lQ.length){ST.lQ=weighted();ST.lI=0;toast(`一輪完成！${ST.lSes.c}/${ST.lSes.t}`);}ST.lCh=ch4(ST.lQ[ST.lI%ST.lQ.length]);render();}
+
+// ── STATS ──
+function rStats(m){
+  const active=G.filter(g=>!g.dis);
+  const learned=active.filter(g=>{const s=gsc(g.en);return s.t>=2&&s.c/s.t>=0.7;}).length;
+  const att=active.filter(g=>gsc(g.en).t>0).length;
+  const tc=Object.values(ST.scores).reduce((a,b)=>a+b.c,0);
+  const tt=Object.values(ST.scores).reduce((a,b)=>a+b.t,0);
+  const sorted=[...active].sort((a,b)=>{const sa=gsc(a.en),sb=gsc(b.en);return(sa.t>0?sa.c/sa.t:.5)-(sb.t>0?sb.c/sb.t:.5)});
+  m.innerHTML=`
+    <div style="font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:500;margin-bottom:18px">學習進度</div>
+    <div class="stc">
+      <div class="stcd"><span class="stn" style="color:var(--ok)">${learned}</span><span class="stl">已掌握 / ${active.length}</span></div>
+      <div class="stcd"><span class="stn">${att}</span><span class="stl">已練習</span></div>
+      <div class="stcd"><span class="stn" style="color:var(--gold)">${tt>0?Math.round(tc/tt*100):0}%</span><span class="stl">總正確率</span></div>
+    </div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:10px">所有寶石（最弱排前面）</div>
+    <div class="stg">
+      ${sorted.map(g=>{const s=gsc(g.en);const r=s.t>0?s.c/s.t:null;const col=r===null?'var(--text3)':r>=0.7?'var(--ok)':r>=0.4?'#F59E0B':'var(--err)';return`<div class="str"><div class="sdd" style="background:${g.hx}"></div><div style="flex:1;min-width:0"><div style="font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${g.en}</div><div style="font-size:10px;color:var(--text3)">${g.zh}</div></div><div style="font-size:11px;color:${col};flex-shrink:0">${r===null?'·':`${s.c}/${s.t}`}</div></div>`;}).join('')}
+    </div>
+    <div style="margin-top:16px;text-align:center"><button onclick="if(confirm('重置所有進度？')){ST.scores={};saveScores();upProg();render();}" style="background:none;border:1px solid var(--b2);border-radius:8px;color:var(--text3);padding:8px 16px;font-size:12px">重置進度</button></div>`;
+}
+
+// ── JEWELLERY TYPES (PDF p.3) ──
+function rJewel(m) {
+  const types = [
+    {en:'Pendant',zh:'吊墜',note:'掛在鏈子上的墜飾'},
+    {en:'Necklace',zh:'項鍊',note:'戴在頸部的鏈飾'},
+    {en:'Brooch',zh:'胸針',note:'別在衣服上的裝飾別針'},
+    {en:'Ear-rings',zh:'耳環',note:'耳朵上的飾品'},
+    {en:'Ring',zh:'戒指',note:'手指上的環形飾品'},
+    {en:'Chain',zh:'鏈',note:'金屬連環鏈條，可單獨戴或搭配墜'},
+    {en:'Bracelet',zh:'手鍊',note:'戴在手腕的細鏈飾品'},
+    {en:'Bangle',zh:'手鐲',note:'硬質圓環手環（不可開合）'},
+    {en:'Tie Tack',zh:'領帶別針',note:'固定領帶用的小別針'},
+    {en:'Tie Bar',zh:'領帶夾',note:'橫夾領帶的夾子'},
+    {en:'Bolo Tie',zh:'保羅領帶',note:'牛仔風格的繩狀領帶，配金屬扣'},
+    {en:'Cuff Links',zh:'袖扣',note:'固定袖口的一對裝飾扣'},
+    {en:'Cuff Bracelet',zh:'寬版手鐲',note:'(PDF 手寫補充) 開口式硬質寬手環'},
+  ];
+  const pstones = [
+    'Ammolite','B.C. Jade','Jade Catseye',
+    'Agate','Amber','Aquamarine','Opal','Boulder Opal','Black Opal','Mexican Fire Opal','Fossilized Opal Clam Shell',
+    'Diamond','Garnet','Kunzite','Moonstone','Peridot','Rhodolite Garnet','Rhodochrosite','Rutilated Quartz','Rhodonite',
+    'Maple Coin','Maple Charm',
+    'Tanzanite','Turquoise','Alexandrite','Amethyst','Blue Topaz','Chrysoberyl Catseye','Coral','Emerald',
+    'Imperial Topaz','Lapis Lazuli','Onyx','Pearl','South Sea Pearl','Tahitian Black Pearl','Quartz','Ruby','Sapphire',
+    'Spinel','Tourmaline','Tourmaline Catseye','Zircon','Cameo','Beryl','Citrine','Tsavorite','Malachite',
+    'Hematite','Labradorite','Hessonite Garnet','Catseye Beryl',
+  ];
+  m.innerHTML = `
+    <div style="font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:500;margin-bottom:6px">珠寶類型 Jewellery Types</div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:20px">來源：PDF 第三頁 · 點英文名稱聆聽發音</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;margin-bottom:32px">
+      ${types.map(t=>`<div onclick="spk('${t.en}')" style="background:var(--bg2);border:1px solid var(--b1);border-radius:var(--r);padding:12px 14px;cursor:pointer;transition:border-color .15s" onmouseover="this.style.borderColor='rgba(200,169,110,.35)'" onmouseout="this.style.borderColor=''">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;margin-bottom:3px">${t.en}</div>
+        <div style="font-size:14px;color:var(--gold);margin-bottom:4px">${t.zh}</div>
+        <div style="font-size:11px;color:var(--text3)">${t.note}</div>
+      </div>`).join('')}
+    </div>
+    <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;margin-bottom:6px">特殊商品（非寶石類）</div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:14px">PDF 第三頁石頭清單中，以下品項為加拿大紀念品，不屬於礦石或寶石類別</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;margin-bottom:32px">
+      <div style="background:var(--bg2);border:1px solid rgba(200,169,110,.3);border-radius:var(--r);padding:14px 16px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <span style="font-size:22px">🍁</span>
+          <div>
+            <div onclick="spk('Maple Coin')" style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;cursor:pointer">Maple Coin <span style="font-size:12px;color:var(--text3)">🔊</span></div>
+            <div style="font-size:13px;color:var(--gold)">楓葉幣</div>
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--text2);line-height:1.6">加拿大皇家鑄幣廠出產的金/銀楓葉紀念幣（Canadian Maple Leaf coin）。純金版純度 99.99%，是加拿大標誌性紀念品。在珠寶店中作為獨立收藏品販售，非寶石。</div>
+      </div>
+      <div style="background:var(--bg2);border:1px solid rgba(200,169,110,.3);border-radius:var(--r);padding:14px 16px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <span style="font-size:22px">🍁</span>
+          <div>
+            <div onclick="spk('Maple Charm')" style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;cursor:pointer">Maple Charm <span style="font-size:12px;color:var(--text3)">🔊</span></div>
+            <div style="font-size:13px;color:var(--gold)">楓葉吊飾</div>
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--text2);line-height:1.6">楓葉造型的小吊飾（charm），可掛於手鍊或鍊子上。材質通常為金或銀，帶有楓葉圖案，是加拿大旅遊紀念品的代表。非寶石，屬飾品配件類。</div>
+      </div>
+    </div>
+    <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;margin-bottom:6px">PDF 第三頁 石頭清單</div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:14px">以下為 PDF 原文完整列表（部分品項已從主學習清單移除或尚待確認）</div>
+    <div style="display:flex;flex-wrap:wrap;gap:7px">
+      ${pstones.map(s=>{const inG=G.some(g=>g.en===s||g.zh===s);return`<span onclick="spk('${s}')" style="padding:5px 12px;border-radius:16px;font-size:12px;cursor:pointer;border:1px solid ${inG?'rgba(200,169,110,.4)':'var(--b1)'};color:${inG?'var(--gold)':'var(--text2)'};background:${inG?'rgba(200,169,110,.08)':'transparent'}">${s}</span>`;}).join('')}
+    </div>
+    <div style="font-size:11px;color:var(--text3);margin-top:10px">⭐ 金色 = 在主學習清單中 · 灰色 = 尚待確認是否加入</div>`;
+}
+
+// ── BIRTHSTONES (PDF p.4 + GIA data) ──
+function rBirth(m) {
+  const EN = [
+    {m:'1月',en:'Garnet',zh:'石榴石',col:'深紅（也有綠、橙）',hard:'6.5–7.5',loc:'非洲（莫三比克、坦尚尼亞）、斯里蘭卡、印度'},
+    {m:'2月',en:'Amethyst',zh:'紫水晶',col:'紫色',hard:'7',loc:'巴西、烏拉圭、非洲'},
+    {m:'3月',en:'Aquamarine',zh:'湖水藍寶',col:'藍色至藍綠色',hard:'7.5–8',loc:'巴西、肯亞、馬達加斯加、奈及利亞、美國、中國、緬甸'},
+    {m:'4月',en:'Diamond',zh:'鑽石',col:'無色（也有黃、粉、藍等）',hard:'10',loc:'南非、俄羅斯、波札那、澳洲、加拿大'},
+    {m:'5月',en:'Emerald',zh:'祖母綠',col:'綠色',hard:'7.5–8',loc:'哥倫比亞（最頂級）、尚比亞、巴西、辛巴威'},
+    {m:'6月',en:'Pearl',zh:'珍珠',col:'白/奶油/粉/黑',hard:'2.5–3',loc:'日本、澳洲、大溪地（法屬玻里尼西亞）、波斯灣'},
+    {m:'7月',en:'Ruby',zh:'紅寶石',col:'紅色',hard:'9',loc:'緬甸、泰國、斯里蘭卡、莫三比克'},
+    {m:'8月',en:'Peridot',zh:'橄欖石',col:'黃綠色',hard:'6.5–7',loc:'美國（亞利桑那）、中國、巴基斯坦、緬甸'},
+    {m:'9月',en:'Sapphire',zh:'藍寶石',col:'藍色（也有各色，除紅以外）',hard:'9',loc:'斯里蘭卡、緬甸、克什米爾（印度）、泰國、馬達加斯加'},
+    {m:'10月',en:'Opal',zh:'蛋白石',col:'變色遊彩（白/黑/火）',hard:'5–6.5',loc:'澳洲（最主要）、衣索比亞、墨西哥'},
+    {m:'11月',en:'Topaz',zh:'拓帕石',col:'黃、橙、粉、藍',hard:'8',loc:'巴西、巴基斯坦、美國、俄羅斯'},
+    {m:'12月',en:'Turquoise',zh:'土耳其石',col:'藍綠色',hard:'5–6',loc:'美國西南、伊朗、中國'},
+  ];
+  const ENalt = [
+    {m:'3月(副)',en:'Bloodstone',zh:'血石',col:'深綠+紅點',hard:'6.5–7',loc:'印度、巴西、澳洲'},
+    {m:'6月(副)',en:'Alexandrite',zh:'亞歷山大石',col:'日光下綠/燈光下紫紅',hard:'8.5',loc:'巴西、斯里蘭卡、東非'},
+    {m:'6月(副)',en:'Moonstone',zh:'月光石',col:'白/藍流光',hard:'6–6.5',loc:'印度、斯里蘭卡'},
+    {m:'8月(副)',en:'Spinel',zh:'尖晶石',col:'紅、粉、藍、紫、橙等',hard:'8',loc:'緬甸、斯里蘭卡、坦尚尼亞'},
+    {m:'10月(副)',en:'Tourmaline',zh:'碧璽',col:'多彩（紅、綠、藍等）',hard:'7–7.5',loc:'巴西、非洲、美國'},
+    {m:'11月(副)',en:'Citrine',zh:'黃水晶',col:'黃至橙色',hard:'7',loc:'巴西（主要）'},
+    {m:'12月(副)',en:'Tanzanite',zh:'丹泉石',col:'藍紫色',hard:'6–7',loc:'坦尚尼亞（全球唯一產地）'},
+    {m:'12月(副)',en:'Zircon',zh:'鋯石',col:'藍色（最受歡迎）',hard:'6–7.5',loc:'柬埔寨、緬甸、斯里蘭卡'},
+  ];
+  // PDF European/German tradition (exactly as in PDF)
+  const DE = [
+    {m:'1月',en:'Rose Quartz',zh:'粉水晶',note:'(PDF 備注：Pink Quartz 亦可)'},
+    {m:'2月',en:'Onyx',zh:'縞瑪瑙',note:''},
+    {m:'3月',en:'Red Jasper',zh:'紅碧玉',note:''},
+    {m:'4月',en:'Rock Crystal',zh:'岩晶（透明水晶）',note:'即無色水晶 Crystal'},
+    {m:'5月',en:'Chrysoprase',zh:'澳洲玉',note:'⛔ 已不販售（商品下架）'},
+    {m:'6月',en:'Moonstone',zh:'月光石',note:''},
+    {m:'7月',en:'Carnelian',zh:'肉紅玉髓',note:''},
+    {m:'8月',en:'Aventurine',zh:'東菱玉',note:'⛔ 已不販售（商品下架）'},
+    {m:'9月',en:'Lapis Lazuli',zh:'青金石',note:''},
+    {m:'10月',en:'Tourmaline',zh:'碧璽',note:''},
+    {m:'11月',en:"Tiger's Eye",zh:'虎眼石',note:''},
+    {m:'12月',en:'Zircon',zh:'鋯石',note:''},
+  ];
+
+  const row=(b)=>`<tr style="border-bottom:0.5px solid var(--b1)">
+    <td style="padding:8px 10px;font-size:12px;color:var(--text3);white-space:nowrap">${b.m}</td>
+    <td style="padding:8px 10px;font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;cursor:pointer" onclick="spk('${b.en.replace(/'/g,"\\'")}')">${b.en} <span style="font-size:11px;color:var(--text3)">🔊</span></td>
+    <td style="padding:8px 10px;font-size:13px;color:var(--gold)">${b.zh}</td>
+    ${b.col!==undefined?`<td style="padding:8px 10px;font-size:11px;color:var(--text2)">${b.col}</td><td style="padding:8px 10px;font-size:11px;color:var(--text2);text-align:center">${b.hard}</td><td style="padding:8px 10px;font-size:11px;color:var(--text2)">${b.loc}</td>`:`<td colspan="3" style="padding:8px 10px;font-size:11px;color:${b.note.includes('⚠️')?'var(--err)':'var(--text3)'}">${b.note||'–'}</td>`}
+  </tr>`;
+
+  const tableWrap=(rows,heads)=>`<div style="overflow-x:auto;margin-bottom:28px">
+    <table style="width:100%;border-collapse:collapse;min-width:560px">
+      <thead><tr style="border-bottom:1px solid var(--b2)">${heads.map(h=>`<th style="padding:8px 10px;font-size:11px;color:var(--text3);text-align:left;font-weight:500;letter-spacing:.06em">${h}</th>`).join('')}</tr></thead>
+      <tbody>${rows.map(row).join('')}</tbody>
+    </table>
+  </div>`;
+
+  m.innerHTML = `
+    <div style="font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:500;margin-bottom:4px">誕生石 Birthstones</div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:24px">來源：PDF 第四頁 + GIA (gia.edu/birthstones) · 點英文名稱聆聽發音</div>
+
+    <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;margin-bottom:4px">英語圈 (English) — 主要誕生石</div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:10px">PDF 第四頁原文，附 GIA 資料補充：顏色、硬度、主要產地</div>
+    ${tableWrap(EN,['月份','英文 / 發音','中文','顏色','硬度 (Mohs)','主要產地'])}
+
+    <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;margin-bottom:4px">英語圈 (English) — GIA 現代替代誕生石</div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:10px">GIA 網站列出的現代副石（PDF 未收錄，僅供參考）</div>
+    ${tableWrap(ENalt,['月份','英文 / 發音','中文','顏色','硬度 (Mohs)','主要產地'])}
+
+    <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;margin-bottom:4px">歐洲德語圈 (European/German) — 誕生石</div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:10px">PDF 第四頁原文（英語圈之外另加此傳統）。⚠️ 標示者需注意。</div>
+    ${tableWrap(DE,['月份','英文 / 發音','中文','備注'])}
+  `;
+}
+
+// ── INIT ──
+let _loadStarted = false;
+function triggerLoad() {
+  if (_loadStarted) return;
+  _loadStarted = true;
+  loadImages();
+}
+
+render();
+upProg();
+setTimeout(triggerLoad, 300);
+
+// Pre-seed progress from previous session (imported by user)
+(function(){
+  try {
+    const existing = JSON.parse(localStorage.getItem(LS_KEY) || '{}');
+    const seed = {"Garnet":{"c":1,"t":1},"Rutilated Quartz":{"c":1,"t":1}};
+    let changed = false;
+    for (const [k, v] of Object.entries(seed)) {
+      if (!existing[k]) { existing[k] = v; changed = true; }
+    }
+    if (changed) { localStorage.setItem(LS_KEY, JSON.stringify(existing)); ST.scores = existing; upProg(); }
+  } catch(e) {}
+})();
+</script>
+</body>
+</html>
