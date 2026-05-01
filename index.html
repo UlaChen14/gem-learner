@@ -1184,6 +1184,13 @@ render();
 upProg();
 setTimeout(triggerLoad, 300);
 
+document.addEventListener('keydown', e => {
+  if (e.code === 'Space' && ST.mode === 'spell' && ST.spAns) {
+    e.preventDefault();
+    spellNext();
+  }
+});
+
 // Pre-seed progress from previous session (imported by user)
 (function(){
   try {
