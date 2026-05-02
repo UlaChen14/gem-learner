@@ -613,7 +613,7 @@ function rBrowse(m){
   m.innerHTML=`
     <div class="status-bar" id="img-status"><div class="spin"></div><span>圖片載入中...</span></div>
     <div class="crow">
-      <input class="srch" placeholder="搜尋..." value="${ST.bQ}" oninput="ST.bQ=this.value;render()">
+      <input id="browse-srch" class="srch" placeholder="搜尋..." value="${ST.bQ}" oninput="bSearch(this.value,this.selectionStart)">
       ${CLS.map(c=>`<button class="chip ${!activeFam&&ST.bF===c?'act':''}" onclick="ST.bFam=null;ST.bF='${c}';render()">${LBL[c]}</button>`).join('')}
     </div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
@@ -1188,11 +1188,21 @@ render();
 upProg();
 setTimeout(triggerLoad, 300);
 
+function bSearch(val, sel) {
+  ST.bQ = val;
+  render();
+  const el = document.getElementById('browse-srch');
+  if (el) { el.focus(); el.setSelectionRange(sel, sel); }
+}
 document.addEventListener('keydown', e => {
-  if (e.code === 'Space' && ST.mode === 'spell' && ST.spAns) {
-    e.preventDefault();
-    spellNext();
-  }
+  if (e.code !== 'Space') return;
+  const tag = document.activeElement && document.activeElement.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+  e.preventDefault();
+  if (ST.mode === 'flash' && ST.fcQ.length) { ST.fcFlip ? fcAns(true) : flipCard(); }
+  else if (ST.mode === 'quiz'   && ST.qAns)               qNext();
+  else if (ST.mode === 'listen' && ST.lAns)               lNext();
+  else if (ST.mode === 'spell'  && ST.spAns)              spellNext();
 });
 
 // Pre-seed progress from previous session (imported by user)
