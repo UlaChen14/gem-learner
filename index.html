@@ -890,17 +890,42 @@ function rBirth(m) {
 
 // ── SPELL ──
 function spellFeedback(typed, correct) {
-  let html = '';
-  const max = Math.max(typed.length, correct.length);
-  for (let i = 0; i < max; i++) {
-    const tc = typed[i] || '';
-    const cc = correct[i] || '';
-    if (!cc)       html += `<span style="color:var(--err)"><s>${tc}</s></span>`; // extra
-    else if (!tc)  html += `<span style="color:var(--err);text-decoration:underline">${cc}</span>`; // missing
-    else if (tc.toLowerCase()===cc.toLowerCase()) html += `<span style="color:var(--ok)">${tc}</span>`; // correct
-    else           html += `<span style="color:var(--err)" title="→${cc}">${tc}</span>`; // wrong
+  if (!typed) return `<span style="color:var(--text3)">（未輸入）</span>`;
+  // LCS-based diff for clear error highlighting
+  const a = typed, b = correct;
+  const n = a.length, m = b.length;
+  // Build LCS table (case-insensitive)
+  const dp = Array.from({length:n+1}, ()=>new Uint16Array(m+1));
+  for (let i=1;i<=n;i++) for (let j=1;j<=m;j++) {
+    dp[i][j] = a[i-1].toLowerCase()===b[j-1].toLowerCase() ? dp[i-1][j-1]+1 : Math.max(dp[i-1][j],dp[i][j-1]);
   }
-  return html || `<span style="color:var(--text3)">（未輸入）</span>`;
+  // Backtrack to get diff ops
+  const ops = []; // {type:'ok'|'extra'|'miss', ch}
+  let i=n, j=m;
+  while (i>0 || j>0) {
+    if (i>0 && j>0 && a[i-1].toLowerCase()===b[j-1].toLowerCase()) {
+      ops.push({type:'ok', ch:a[i-1], correct:b[j-1]}); i--; j--;
+    } else if (i>0 && (j===0 || dp[i-1][j]>=dp[i][j-1])) {
+      ops.push({type:'extra', ch:a[i-1]}); i--;
+    } else {
+      ops.push({type:'miss', ch:b[j-1]}); j--;
+    }
+  }
+  ops.reverse();
+  // Render: green=correct, red strikethrough=extra typed, red underline=missing
+  let html = '';
+  for (const op of ops) {
+    if (op.type==='ok') {
+      // Case mismatch: show in yellow with tooltip
+      if (op.ch !== op.correct) html += `<span style="color:#F59E0B" title="大小寫：${op.correct}">${op.ch}</span>`;
+      else html += `<span style="color:var(--ok)">${op.ch}</span>`;
+    } else if (op.type==='extra') {
+      html += `<span style="color:var(--err);text-decoration:line-through;opacity:.7" title="多餘">${op.ch}</span>`;
+    } else {
+      html += `<span style="color:var(--err);border-bottom:2px solid var(--err);font-weight:600" title="漏掉">${op.ch}</span>`;
+    }
+  }
+  return html;
 }
 function rSpell(m) {
   if (!ST.spQ.length) {
@@ -931,7 +956,8 @@ function rSpell(m) {
         <div style="text-align:center">
           <div style="font-size:11px;color:var(--text3);margin-bottom:6px">你輸入的：</div>
           <div class="sp-letter">${spellFeedback(ST.spTyped, g.en)}</div>
-          ${!ok?`<div style="margin-top:8px;font-size:13px;color:var(--text2)">正確：<span style="font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--text)">${g.en}</span></div>`:'<div style="font-size:14px;color:var(--ok);margin-top:6px">✓ 完全正確！</div>'}
+          ${!ok?`<div style="margin-top:6px;font-size:11px;color:var(--text3)"><span style="color:var(--ok)">■</span> 正確　<span style="color:var(--err);text-decoration:line-through">■</span> 多餘　<span style="color:var(--err);border-bottom:2px solid var(--err)">■</span> 漏掉　<span style="color:#F59E0B">■</span> 大小寫</div>
+          <div style="margin-top:8px;font-size:13px;color:var(--text2)">正確：<span style="font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--text)">${g.en}</span></div>`:'<div style="font-size:14px;color:var(--ok);margin-top:6px">✓ 完全正確！</div>'}
           ${g.tip?`<div style="font-size:11px;color:var(--text3);font-style:italic;max-width:320px;margin:8px auto;line-height:1.5">💡 ${g.tip}</div>`:''}
         </div>
         <button class="bbs" onclick="spellNext()">下一題 →</button>
